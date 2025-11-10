@@ -9,29 +9,63 @@ const PurchaseSuccessPage = () => {
 	const [isProcessing, setIsProcessing] = useState(true);
 	const { clearCart } = useCartStore();
 	const [error, setError] = useState(null);
+	const [id, setId] = useState(null)
+
+	// useEffect(() => {
+	// 	const handleCheckoutSuccess = async (sessionId) => {
+	// 		try {
+	// 			await axios.post("/payments/checkout-success", {
+	// 				sessionId,
+	// 			});
+	// 			clearCart();
+	// 		} catch (error) {
+	// 			console.log(error);
+	// 		} finally {
+	// 			setIsProcessing(false);
+	// 		}
+	// 	};
+
+	// 	// const sessionId = new URLSearchParams(window.location.search).get("session_id");
+	// 	const sessionId = new URLSearchParams(window.location.search).get("orderId");
+	// 	console.log(sessionId);
+		
+	// 	if (sessionId) {
+	// 		handleCheckoutSuccess(sessionId);
+	// 	} else {
+	// 		setIsProcessing(false);
+	// 		setError("No session ID found in the URL");
+	// 	}
+	// }, [clearCart]);
 
 	useEffect(() => {
-		const handleCheckoutSuccess = async (sessionId) => {
-			try {
-				await axios.post("/payments/checkout-success", {
-					sessionId,
-				});
-				clearCart();
-			} catch (error) {
-				console.log(error);
-			} finally {
-				setIsProcessing(false);
-			}
-		};
+		const params = new URLSearchParams(window.location.search);
+		const orderId = params.get("orderId") || params.get("order_id");
+		setId(orderId)
 
-		const sessionId = new URLSearchParams(window.location.search).get("session_id");
-		if (sessionId) {
-			handleCheckoutSuccess(sessionId);
-		} else {
+		if (!orderId) {
 			setIsProcessing(false);
-			setError("No session ID found in the URL");
+			setError("No orderId (or session_id) found in the URL");
+			return;
 		}
+
+		(async () => {
+			try {
+			// If you want to fetch order details from backend (recommended)
+			// make sure axios.baseURL points to your backend or you use full URL
+			// const res = await axios.get(`/orders/${orderId}`);
+			// setOrderInfo(res.data);
+
+			clearCart();
+			
+			} catch (err) {
+			console.error("failed to fetch order:", err);
+			setError("Failed to fetch order details");
+			} finally {
+			setIsProcessing(false);
+			}
+		})();
 	}, [clearCart]);
+
 
 	if (isProcessing) return "Processing...";
 
@@ -66,7 +100,7 @@ const PurchaseSuccessPage = () => {
 					<div className='bg-gray-700 rounded-lg p-4 mb-6'>
 						<div className='flex items-center justify-between mb-2'>
 							<span className='text-sm text-gray-400'>Order number</span>
-							<span className='text-sm font-semibold text-emerald-400'>#12345</span>
+							<span className='text-sm font-semibold text-emerald-400'>{id}</span>
 						</div>
 						<div className='flex items-center justify-between'>
 							<span className='text-sm text-gray-400'>Estimated delivery</span>

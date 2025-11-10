@@ -6,12 +6,14 @@ import { loadStripe } from "@stripe/stripe-js";
 import axios from "../lib/axios";
 import { useAddressStore } from "../stores/useAddressStore";
 import toast from "react-hot-toast";
+import { useState } from "react";
 
 const stripePromise = loadStripe(
 	"pk_test_51KDTCDSGNvdrBQJJeyLX8rYoOFxOdHrwPskPEuzmFp0F5ol38avQCFyCl3sWyfMu7LoughhJBfigV3vxRHPBh7sO00R4FHN8Ja"
 );
 
 const OrderSummary = () => {
+	const [isProcessing, setIsProcessing] = useState(false); // ✅ add this line
 	const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore();
 	const { address } = useAddressStore();
 
@@ -22,28 +24,115 @@ const OrderSummary = () => {
 	const formattedTotal = total.toFixed(2);
 	const formattedSavings = savings.toFixed(2);
 
-	const handlePayment = async () => {
-		console.log(selectedAddress);
+	// const handlePayment = async () => {
+	// 	console.log(selectedAddress);
 		
-		if (!selectedAddress) {
-			return toast.error("Please add/select a shipping address before checkout");
-		}
-		const stripe = await stripePromise;
-		const res = await axios.post("/payments/create-checkout-session", {
+	// 	if (!selectedAddress) {
+	// 		return toast.error("Please add/select a shipping address before checkout");
+	// 	}
+	// 	const stripe = await stripePromise;
+	// 	const res = await axios.post("/payments/create-checkout-session", {
+	// 		products: cart,
+	// 		couponCode: coupon ? coupon.code : null,
+	// 		address: selectedAddress, // re-send here too
+	// 	});
+
+	// 	const session = res.data;
+	// 	const result = await stripe.redirectToCheckout({
+	// 		sessionId: session.id,
+	// 	});
+
+	// 	if (result.error) {
+	// 		console.error("Error:", result.error);
+	// 	}
+	// };
+
+	// inside OrderSummary component
+	const handlePayment = async () => {
+		if (!selectedAddress) return toast.error("Please add/select an address");
+		if (!cart || cart.length === 0) return toast.error("Cart empty");
+
+		setIsProcessing(true);
+		try {
+			const res = await axios.post("/payments/razorpay-create-order", {
 			products: cart,
 			couponCode: coupon ? coupon.code : null,
-			address: selectedAddress, // re-send here too
-		});
+			address: selectedAddress,
+			});
 
-		const session = res.data;
-		const result = await stripe.redirectToCheckout({
-			sessionId: session.id,
-		});
+			const { orderId, amount, currency, keyId, localOrderId } = res.data;
 
-		if (result.error) {
-			console.error("Error:", result.error);
+			// dynamically load Razorpay script (if not loaded)
+			const rzpScriptLoaded = await new Promise((resolve) => {
+			if (window.Razorpay) return resolve(true);
+			const script = document.createElement("script");
+			script.src = "https://checkout.razorpay.com/v1/checkout.js";
+			script.onload = () => resolve(true);
+			script.onerror = () => resolve(false);
+			document.body.appendChild(script);
+			});
+
+			if (!rzpScriptLoaded) {
+			toast.error("Failed to load Razorpay SDK");
+			setIsProcessing(false);
+			return;
+			}
+
+			const options = {
+			key: keyId,
+			amount: amount, // in paise (integer)
+			currency: currency || "INR",
+			name: "Your Shop Name",
+			description: "Order Payment",
+			order_id: orderId, // razorpay order id
+			handler: async function (response) {
+				// response contains razorpay_payment_id, razorpay_order_id, razorpay_signature
+				try {
+					const verifyRes = await axios.post("/payments/razorpay-verify", {
+					razorpay_order_id: response.razorpay_order_id,
+					razorpay_payment_id: response.razorpay_payment_id,
+					razorpay_signature: response.razorpay_signature,
+					localOrderId, // optional
+				});
+
+				if (verifyRes.data?.success) {
+					toast.success("Payment successful!");
+					// redirect to success page or show modal
+					// window.location.href = `${process.env.REACT_APP_CLIENT_URL || ""}/purchase-success?orderId=${verifyRes.data.orderId}`;
+					// window.location.href = `${import.meta.env.CLIENT_URL}/purchase-success?orderId=${verifyRes.data.orderId}`;
+					window.location.href = `/purchase-success?orderId=${encodeURIComponent(orderId)}`;
+				} else {
+					toast.error(verifyRes.data?.message || "Verification failed");
+				}
+				} catch (err) {
+				console.error("verify error", err);
+				toast.error("Payment verification failed. Contact support.");
+				} finally {
+				setIsProcessing(false);
+				}
+			},
+			prefill: {
+				email: /* user email if available */ "",
+				name: /* user name */ "",
+				contact: /* phone */ "",
+			},
+			notes: {
+				// any custom notes you want to store
+			},
+			theme: {
+				color: "#10B981",
+			},
+			};
+
+			const rzp = new window.Razorpay(options);
+			rzp.open();
+		} catch (err) {
+			console.error(err);
+			toast.error(err?.response?.data?.message || "Failed to create order");
+			setIsProcessing(false);
 		}
-	};
+		};
+
 
 	return (
 		<motion.div
