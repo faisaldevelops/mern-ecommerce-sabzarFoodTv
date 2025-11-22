@@ -76,6 +76,8 @@ const userSchema = new mongoose.Schema(
 );
 
 // Pre-save hook to hash password before saving to database (only if password is modified)
+// Note: Password is optional for OTP-only users. Only users created via legacy email/password
+// signup or guest checkout will have passwords. This hook safely handles both cases.
 userSchema.pre("save", async function (next) {
 	if (!this.password || !this.isModified("password")) return next();
 

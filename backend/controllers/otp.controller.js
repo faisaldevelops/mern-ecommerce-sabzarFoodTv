@@ -39,7 +39,10 @@ export const sendOTP = async (req, res) => {
     // Check if user exists
     const userExists = await User.findOne({ phoneNumber });
 
-    // If signing up and user already exists, return error
+    // Note: User enumeration trade-off
+    // The following checks reveal account existence to prevent confusion during signup/login.
+    // This is a deliberate UX decision per requirements, trading some security for better user experience.
+    // If signup and user already exists, return error
     if (isSignup && userExists) {
       return res.status(400).json({ message: "Phone number already registered. Please login instead." });
     }
