@@ -1,19 +1,69 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { LogIn, Mail, Lock, ArrowRight, Loader } from "lucide-react";
+import { Phone, KeyRound, ArrowRight, Loader } from "lucide-react";
+import axios from "../lib/axios";
+import toast from "react-hot-toast";
 import { useUserStore } from "../stores/useUserStore";
 
 const LoginPage = () => {
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
+	const [step, setStep] = useState("phone"); // "phone" or "otp"
+	const [phoneNumber, setPhoneNumber] = useState("");
+	const [otp, setOtp] = useState("");
+	const [loading, setLoading] = useState(false);
+	const { checkAuth } = useUserStore();
 
-	const { login, loading } = useUserStore();
-
-	const handleSubmit = (e) => {
+	const handleSendOTP = async (e) => {
 		e.preventDefault();
-		console.log(email, password);
-		login(email, password);
+		
+		if (!/^\d{10}$/.test(phoneNumber)) {
+			toast.error("Please enter a valid 10-digit phone number");
+			return;
+		}
+
+		setLoading(true);
+		try {
+			const response = await axios.post("/otp/send", { phoneNumber });
+			toast.success(response.data.message);
+			
+			// In development, show OTP in console
+			if (response.data.otp) {
+				console.log("OTP:", response.data.otp);
+				toast.success(`Dev Mode - OTP: ${response.data.otp}`, { duration: 10000 });
+			}
+			
+			setStep("otp");
+		} catch (error) {
+			toast.error(error.response?.data?.message || "Failed to send OTP");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleVerifyOTP = async (e) => {
+		e.preventDefault();
+		
+		if (!otp || otp.length !== 6) {
+			toast.error("Please enter the 6-digit OTP");
+			return;
+		}
+
+		setLoading(true);
+		try {
+			const response = await axios.post("/otp/verify", {
+				phoneNumber,
+				otp,
+			});
+			
+			toast.success(response.data.message);
+			
+			// Refresh auth state
+			await checkAuth();
+		} catch (error) {
+			toast.error(error.response?.data?.message || "Failed to verify OTP");
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	return (
@@ -24,7 +74,9 @@ const LoginPage = () => {
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.8 }}
 			>
-				<h2 className='mt-6 text-center text-3xl font-extrabold text-emerald-400'>Create your account</h2>
+				<h2 className='mt-6 text-center text-3xl font-extrabold text-emerald-400'>
+					{step === "phone" ? "Login to your account" : "Verify OTP"}
+				</h2>
 			</motion.div>
 
 			<motion.div
@@ -34,75 +86,116 @@ const LoginPage = () => {
 				transition={{ duration: 0.8, delay: 0.2 }}
 			>
 				<div className='bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10'>
-					<form onSubmit={handleSubmit} className='space-y-6'>
-						<div>
-							<label htmlFor='email' className='block text-sm font-medium text-gray-300'>
-								Email address
-							</label>
-							<div className='mt-1 relative rounded-md shadow-sm'>
-								<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-									<Mail className='h-5 w-5 text-gray-400' aria-hidden='true' />
+					{step === "phone" ? (
+						<form onSubmit={handleSendOTP} className='space-y-6'>
+							<div>
+								<label htmlFor='phoneNumber' className='block text-sm font-medium text-gray-300'>
+									Phone Number
+								</label>
+								<div className='mt-1 relative rounded-md shadow-sm'>
+									<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+										<Phone className='h-5 w-5 text-gray-400' aria-hidden='true' />
+									</div>
+									<input
+										id='phoneNumber'
+										type='tel'
+										required
+										value={phoneNumber}
+										onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+										className='block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 
+										rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 
+										focus:border-emerald-500 sm:text-sm'
+										placeholder='Enter 10-digit mobile number'
+									/>
 								</div>
-								<input
-									id='email'
-									type='email'
-									required
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-									className=' block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 
-									rounded-md shadow-sm
-									 placeholder-gray-400 focus:outline-none focus:ring-emerald-500 
-									 focus:border-emerald-500 sm:text-sm'
-									placeholder='you@example.com'
-								/>
+								<p className='mt-1 text-xs text-gray-400'>
+									We'll send you a verification code
+								</p>
 							</div>
-						</div>
 
-						<div>
-							<label htmlFor='password' className='block text-sm font-medium text-gray-300'>
-								Password
-							</label>
-							<div className='mt-1 relative rounded-md shadow-sm'>
-								<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-									<Lock className='h-5 w-5 text-gray-400' aria-hidden='true' />
+							<button
+								type='submit'
+								className='w-full flex justify-center py-2 px-4 border border-transparent 
+								rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600
+								hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
+								focus:ring-emerald-500 transition duration-150 ease-in-out disabled:opacity-50'
+								disabled={loading}
+							>
+								{loading ? (
+									<>
+										<Loader className='mr-2 h-5 w-5 animate-spin' aria-hidden='true' />
+										Sending...
+									</>
+								) : (
+									<>
+										<Phone className='mr-2 h-5 w-5' aria-hidden='true' />
+										Send OTP
+									</>
+								)}
+							</button>
+						</form>
+					) : (
+						<form onSubmit={handleVerifyOTP} className='space-y-6'>
+							<div>
+								<label htmlFor='otp' className='block text-sm font-medium text-gray-300'>
+									Enter OTP sent to +91{phoneNumber}
+								</label>
+								<div className='mt-1 relative rounded-md shadow-sm'>
+									<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+										<KeyRound className='h-5 w-5 text-gray-400' aria-hidden='true' />
+									</div>
+									<input
+										id='otp'
+										type='text'
+										required
+										value={otp}
+										onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+										className='block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 
+										rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 
+										focus:border-emerald-500 sm:text-sm text-center text-2xl tracking-widest'
+										placeholder='Enter 6-digit OTP'
+										maxLength={6}
+									/>
 								</div>
-								<input
-									id='password'
-									type='password'
-									required
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									className=' block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 
-									rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm'
-									placeholder='••••••••'
-								/>
 							</div>
-						</div>
 
-						<button
-							type='submit'
-							className='w-full flex justify-center py-2 px-4 border border-transparent 
-							rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600
-							 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
-							  focus:ring-emerald-500 transition duration-150 ease-in-out disabled:opacity-50'
-							disabled={loading}
-						>
-							{loading ? (
-								<>
-									<Loader className='mr-2 h-5 w-5 animate-spin' aria-hidden='true' />
-									Loading...
-								</>
-							) : (
-								<>
-									<LogIn className='mr-2 h-5 w-5' aria-hidden='true' />
-									Login
-								</>
-							)}
-						</button>
-					</form>
+							<button
+								type='submit'
+								className='w-full flex justify-center py-2 px-4 border border-transparent 
+								rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600
+								hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
+								focus:ring-emerald-500 transition duration-150 ease-in-out disabled:opacity-50'
+								disabled={loading}
+							>
+								{loading ? (
+									<>
+										<Loader className='mr-2 h-5 w-5 animate-spin' aria-hidden='true' />
+										Verifying...
+									</>
+								) : (
+									<>
+										<KeyRound className='mr-2 h-5 w-5' aria-hidden='true' />
+										Verify & Login
+									</>
+								)}
+							</button>
+
+							<button
+								type="button"
+								onClick={() => {
+									setStep("phone");
+									setOtp("");
+								}}
+								className="w-full text-sm text-emerald-400 hover:text-emerald-300"
+								disabled={loading}
+							>
+								Change phone number
+							</button>
+						</form>
+					)}
 
 					<p className='mt-8 text-center text-sm text-gray-400'>
-						Not a member?{" "}
+						Don't have an account?{" "}
 						<Link to='/signup' className='font-medium text-emerald-400 hover:text-emerald-300'>
 							Sign up now <ArrowRight className='inline h-4 w-4' />
 						</Link>

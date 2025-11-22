@@ -117,6 +117,13 @@ export const verifyOTP = async (req, res) => {
         password: crypto.randomBytes(16).toString("hex"), // Random password
       });
       isNewUser = true;
+    } else {
+      // User exists - this is a login, not signup
+      // Update name if provided and different
+      if (name && name !== user.name) {
+        user.name = name;
+        await user.save();
+      }
     }
 
     // Generate tokens and set cookies
@@ -125,7 +132,7 @@ export const verifyOTP = async (req, res) => {
     setCookies(res, accessToken, refreshToken);
 
     res.json({
-      message: "Login successful",
+      message: isNewUser ? "Account created successfully" : "Login successful",
       user: {
         _id: user._id,
         name: user.name,
