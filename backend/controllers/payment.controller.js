@@ -110,18 +110,20 @@ export const checkoutSuccess = async (req, res) => {
 			const products = JSON.parse(session.metadata.products);
 			const address = JSON.parse(session.metadata.address); // 👈 retrieve address
 			
-			// Update stock quantities and sold counts for each product
-			for (const item of products) {
-				await Product.findByIdAndUpdate(
-					item.id,
-					{
-						$inc: {
-							stockQuantity: -item.quantity,
-							sold: item.quantity,
-						},
-					}
-				);
-			}
+			// Update stock quantities and sold counts for each product using Promise.all for better performance
+			await Promise.all(
+				products.map((item) =>
+					Product.findByIdAndUpdate(
+						item.id,
+						{
+							$inc: {
+								stockQuantity: -item.quantity,
+								sold: item.quantity,
+							},
+						}
+					)
+				)
+			);
 
 			const newOrder = new Order({
 				user: session.metadata.userId,

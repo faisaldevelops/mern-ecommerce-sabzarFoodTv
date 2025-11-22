@@ -25,8 +25,6 @@ const OrderslistTab = () => {
 		fetchAllOrders();
 	}, []);
 
-    console.log("Orders", orders);
-
     const updateTrackingStatus = async (orderId, newStatus) => {
         setUpdatingOrder(orderId);
         try {

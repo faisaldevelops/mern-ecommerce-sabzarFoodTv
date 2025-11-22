@@ -170,18 +170,20 @@ export const verifyRazorpayPayment = async (req, res) => {
         return res.status(200).json({ success: true, orderId: order._id, message: "Order already paid" });
       }
       
-      // Update stock quantities and sold counts for each product
-      for (const item of order.products) {
-        await Product.findByIdAndUpdate(
-          item.product,
-          {
-            $inc: {
-              stockQuantity: -item.quantity,
-              sold: item.quantity,
-            },
-          }
-        );
-      }
+      // Update stock quantities and sold counts for each product using Promise.all for better performance
+      await Promise.all(
+        order.products.map((item) =>
+          Product.findByIdAndUpdate(
+            item.product,
+            {
+              $inc: {
+                stockQuantity: -item.quantity,
+                sold: item.quantity,
+              },
+            }
+          )
+        )
+      );
       
       order.razorpayPaymentId = razorpay_payment_id;
       order.status = "paid";

@@ -26,9 +26,8 @@ const LoginPage = () => {
 			const response = await axios.post("/otp/send", { phoneNumber });
 			toast.success(response.data.message);
 			
-			// In development, show OTP in console
+			// In development, show OTP in toast
 			if (response.data.otp) {
-				console.log("OTP:", response.data.otp);
 				toast.success(`Dev Mode - OTP: ${response.data.otp}`, { duration: 10000 });
 			}
 			
