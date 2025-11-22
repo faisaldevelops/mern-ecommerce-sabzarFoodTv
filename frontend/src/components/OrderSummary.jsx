@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useCartStore } from "../stores/useCartStore";
+import { useUserStore } from "../stores/useUserStore";
 import { Link } from "react-router-dom";
 import { MoveRight } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
@@ -7,6 +8,7 @@ import axios from "../lib/axios";
 import { useAddressStore } from "../stores/useAddressStore";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import PhoneAuthModal from "./PhoneAuthModal";
 
 const stripePromise = loadStripe(
 	"pk_test_51KDTCDSGNvdrBQJJeyLX8rYoOFxOdHrwPskPEuzmFp0F5ol38avQCFyCl3sWyfMu7LoughhJBfigV3vxRHPBh7sO00R4FHN8Ja"
@@ -14,7 +16,9 @@ const stripePromise = loadStripe(
 
 const OrderSummary = () => {
 	const [isProcessing, setIsProcessing] = useState(false);
+	const [showPhoneAuth, setShowPhoneAuth] = useState(false);
 	const { total, subtotal, cart } = useCartStore();
+	const { user } = useUserStore();
 	const { address } = useAddressStore();
 
 	const selectedAddress = Array.isArray(address) && address.length ? address[0] : null;
@@ -48,6 +52,24 @@ const OrderSummary = () => {
 	// };
 
 	// inside OrderSummary component
+	const handlePlaceOrder = () => {
+		// Check if user is authenticated
+		if (!user) {
+			// Show phone auth modal
+			setShowPhoneAuth(true);
+			return;
+		}
+
+		// User is authenticated, check address and proceed
+		if (!selectedAddress) {
+			toast.error("Please add/select an address");
+			return;
+		}
+
+		// Proceed to payment
+		handlePayment();
+	};
+
 	const handlePayment = async () => {
 		if (!selectedAddress) return toast.error("Please add/select an address");
 		if (!cart || cart.length === 0) return toast.error("Cart empty");
@@ -165,9 +187,9 @@ const OrderSummary = () => {
 					className='flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300'
 					whileHover={{ scale: 1.05 }}
 					whileTap={{ scale: 0.95 }}
-					onClick={handlePayment}
+					onClick={handlePlaceOrder}
 				>
-					Proceed to Checkout
+					Place Order
 				</motion.button>
 
 				<div className='flex items-center justify-center gap-2'>
@@ -181,6 +203,18 @@ const OrderSummary = () => {
 					</Link>
 				</div>
 			</div>
+			
+			<PhoneAuthModal 
+				isOpen={showPhoneAuth} 
+				onClose={() => setShowPhoneAuth(false)}
+				onSuccess={(data) => {
+					// After successful authentication, check if address exists
+					// If no address, user needs to add one
+					if (!selectedAddress) {
+						toast.success("Please add your delivery address to continue");
+					}
+				}}
+			/>
 		</motion.div>
 	);
 };

@@ -197,3 +197,6 @@ export const createGuestUser = async (req, res) => {
 		res.status(500).json({ message: error.message });
 	}
 };
+
+// Export helper functions for OTP controller
+export { generateTokens, storeRefreshToken, setCookies };
