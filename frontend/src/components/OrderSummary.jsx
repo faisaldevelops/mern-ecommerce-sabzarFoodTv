@@ -189,7 +189,7 @@ const OrderSummary = () => {
 					whileTap={{ scale: 0.95 }}
 					onClick={handlePlaceOrder}
 				>
-					Place Order
+					Buy
 				</motion.button>
 
 				<div className='flex items-center justify-center gap-2'>
