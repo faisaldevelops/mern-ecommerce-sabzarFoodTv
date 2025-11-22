@@ -2,7 +2,7 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import Order from "../models/order.model.js";
-import Coupon from "../models/coupon.model.js";
+import User from "../models/user.model.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -11,15 +11,42 @@ const razorpay = new Razorpay({
 
 /**
  * Create a Razorpay order and a pending local order record.
- * Expects: { products, couponCode, address } in req.body
+ * Expects: { products, address } in req.body
  */
 export const createRazorpayOrder = async (req, res) => {
   try {
-    const { products, couponCode, address } = req.body;
+    const { products, address } = req.body;
     if (!Array.isArray(products) || products.length === 0) {
       return res.status(400).json({ message: "Cart empty" });
     }
     if (!address) return res.status(400).json({ message: "Address required" });
+
+    // Get or create user based on phone number from address
+    let userId = req.user?._id;
+    
+    if (!userId) {
+      // Create guest user from address info
+      const { phoneNumber, name, email } = address;
+      if (!phoneNumber || !name) {
+        return res.status(400).json({ message: "Phone number and name required in address" });
+      }
+
+      // Check if user with this phone exists
+      let user = await User.findOne({ phoneNumber });
+      
+      if (!user) {
+        // Create new guest user
+        user = await User.create({
+          name,
+          phoneNumber,
+          email: email || undefined,
+          isGuest: true,
+          password: crypto.randomBytes(16).toString('hex')
+        });
+      }
+      
+      userId = user._id;
+    }
 
     // compute total in paise (integer)
     let totalPaise = 0;
@@ -29,20 +56,10 @@ export const createRazorpayOrder = async (req, res) => {
       totalPaise += pricePaise * qty;
     }
 
-    // apply coupon server-side if any
-    let coupon = null;
-    if (couponCode) {
-      coupon = await Coupon.findOne({ code: couponCode, userId: req.user._id, isActive: true });
-      if (coupon) {
-        const discountPaise = Math.round((totalPaise * coupon.discountPercentage) / 100);
-        totalPaise -= discountPaise;
-      }
-    }
-
     const options = {
       amount: totalPaise,
       currency: "INR",
-      receipt: `rcpt_${Date.now().toString(36)}_${req.user._id.toString().slice(-6)}`,
+      receipt: `rcpt_${Date.now().toString(36)}_${userId.toString().slice(-6)}`,
       payment_capture: 1, // auto-capture
     };
 
@@ -50,7 +67,7 @@ export const createRazorpayOrder = async (req, res) => {
 
     // Save a pending order locally for idempotency/reference
     const pendingOrder = new Order({
-      user: req.user._id,
+      user: userId,
       products: products.map((p) => ({
         product: p._id || p.id,
         quantity: p.quantity,
@@ -60,7 +77,6 @@ export const createRazorpayOrder = async (req, res) => {
       razorpayOrderId: razorpayOrder.id,
       status: "pending",
       address,
-      couponCode: couponCode || null,
     });
     await pendingOrder.save();
 
@@ -113,8 +129,19 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     if (!order) {
       // create fallback order if pending wasn't saved (rare)
+      // Get userId from req.user if authenticated, or return error
+      let userId = req.user?._id;
+      
+      if (!userId) {
+        // For guest users without pending order, we cannot proceed
+        return res.status(400).json({ 
+          success: false, 
+          message: "Cannot verify payment: order not found. Please contact support with payment ID: " + razorpay_payment_id 
+        });
+      }
+
       order = new Order({
-        user: req.user._id,
+        user: userId,
         products: [], // ideally you passed products earlier and saved pendingOrder
         totalAmount: payment.amount / 100,
         razorpayOrderId: razorpay_order_id,
@@ -131,15 +158,6 @@ export const verifyRazorpayPayment = async (req, res) => {
     }
 
     await order.save();
-
-    // deactivate coupon if used
-    if (order.couponCode) {
-      try {
-        await Coupon.findOneAndUpdate({ code: order.couponCode, userId: order.user }, { isActive: false });
-      } catch (e) {
-        console.warn("Failed to deactivate coupon:", e);
-      }
-    }
 
     return res.json({ success: true, orderId: order._id, message: "Payment verified & order saved" });
   } catch (err) {

@@ -5,8 +5,6 @@ import { ShoppingCart } from "lucide-react";
 import CartItem from "../components/CartItem";
 import PeopleAlsoBought from "../components/PeopleAlsoBought";
 import OrderSummary from "../components/OrderSummary";
-import GiftCouponCard from "../components/GiftCouponCard";
-import AddressPage from "../components/AddressPage";
 
 const CartPage = () => {
 	const { cart } = useCartStore();
@@ -40,9 +38,7 @@ const CartPage = () => {
 							animate={{ opacity: 1, x: 0 }}
 							transition={{ duration: 0.5, delay: 0.4 }}
 						>
-							<AddressPage />
 							<OrderSummary />
-							<GiftCouponCard />
 						</motion.div>
 					)}
 				</div>

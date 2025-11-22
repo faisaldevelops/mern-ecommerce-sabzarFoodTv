@@ -13,21 +13,30 @@ import { useEffect } from "react";
 import LoadingSpinner from "./components/LoadingSpinner";
 import CartPage from "./pages/CartPage";
 import { useCartStore } from "./stores/useCartStore";
+import { useAddressStore } from "./stores/useAddressStore";
 import PurchaseSuccessPage from "./pages/PurchaseSuccessPage";
 import PurchaseCancelPage from "./pages/PurchaseCancelPage";
 
 function App() {
 	const { user, checkAuth, checkingAuth } = useUserStore();
-	const { getCartItems } = useCartStore();
+	const { initCart } = useCartStore();
+	const { fetchAddresses } = useAddressStore();
+	
 	useEffect(() => {
 		checkAuth();
 	}, [checkAuth]);
 
 	useEffect(() => {
-		if (!user) return;
+		// Initialize cart from localStorage on app load
+		initCart();
+	}, [initCart]);
 
-		getCartItems();
-	}, [getCartItems, user]);
+	useEffect(() => {
+		// Fetch addresses when user is logged in
+		if (user) {
+			fetchAddresses();
+		}
+	}, [user, fetchAddresses]);
 
 	if (checkingAuth) return <LoadingSpinner />;
 
@@ -51,12 +60,9 @@ function App() {
 						element={user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' />}
 					/>
 					<Route path='/category/:category' element={<CategoryPage />} />
-					<Route path='/cart' element={user ? <CartPage /> : <Navigate to='/login' />} />
-					<Route
-						path='/purchase-success'
-						element={user ? <PurchaseSuccessPage /> : <Navigate to='/login' />}
-					/>
-					<Route path='/purchase-cancel' element={user ? <PurchaseCancelPage /> : <Navigate to='/login' />} />
+					<Route path='/cart' element={<CartPage />} />
+					<Route path='/purchase-success' element={<PurchaseSuccessPage />} />
+					<Route path='/purchase-cancel' element={<PurchaseCancelPage />} />
 				</Routes>
 			</div>
 			<Toaster />

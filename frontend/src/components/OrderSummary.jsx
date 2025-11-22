@@ -1,23 +1,27 @@
 import { motion } from "framer-motion";
 import { useCartStore } from "../stores/useCartStore";
+import { useUserStore } from "../stores/useUserStore";
+import { useAddressStore } from "../stores/useAddressStore";
 import { Link } from "react-router-dom";
 import { MoveRight } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import axios from "../lib/axios";
-import { useAddressStore } from "../stores/useAddressStore";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import PhoneAuthModal from "./PhoneAuthModal";
+import AddressSelectionModal from "./AddressSelectionModal";
 
 const stripePromise = loadStripe(
 	"pk_test_51KDTCDSGNvdrBQJJeyLX8rYoOFxOdHrwPskPEuzmFp0F5ol38avQCFyCl3sWyfMu7LoughhJBfigV3vxRHPBh7sO00R4FHN8Ja"
 );
 
 const OrderSummary = () => {
-	const [isProcessing, setIsProcessing] = useState(false); // ✅ add this line
-	const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore();
-	const { address } = useAddressStore();
-
-	const selectedAddress = Array.isArray(address) && address.length ? address[0] : null;
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [showPhoneAuth, setShowPhoneAuth] = useState(false);
+	const [showAddressSelection, setShowAddressSelection] = useState(false);
+	const [selectedAddress, setSelectedAddress] = useState(null);
+	const { total, subtotal, cart } = useCartStore();
+	const { user } = useUserStore();
 
 	const savings = subtotal - total;
 	const formattedSubtotal = subtotal.toFixed(2);
@@ -48,16 +52,33 @@ const OrderSummary = () => {
 	// };
 
 	// inside OrderSummary component
-	const handlePayment = async () => {
-		if (!selectedAddress) return toast.error("Please add/select an address");
+	const handlePlaceOrder = () => {
+		// Check if user is authenticated
+		if (!user) {
+			// Show phone auth modal
+			setShowPhoneAuth(true);
+			return;
+		}
+
+		// User is authenticated, show address selection modal
+		setShowAddressSelection(true);
+	};
+
+	const handleAddressSelected = (address) => {
+		setSelectedAddress(address);
+		// Proceed to payment with selected address
+		handlePayment(address);
+	};
+
+	const handlePayment = async (address) => {
+		if (!address) return toast.error("Please add/select an address");
 		if (!cart || cart.length === 0) return toast.error("Cart empty");
 
 		setIsProcessing(true);
 		try {
 			const res = await axios.post("/payments/razorpay-create-order", {
 			products: cart,
-			couponCode: coupon ? coupon.code : null,
-			address: selectedAddress,
+			address: address,
 			});
 
 			const { orderId, amount, currency, keyId, localOrderId } = res.data;
@@ -156,13 +177,6 @@ const OrderSummary = () => {
 							<dd className='text-base font-medium text-emerald-400'>-${formattedSavings}</dd>
 						</dl>
 					)}
-
-					{coupon && isCouponApplied && (
-						<dl className='flex items-center justify-between gap-4'>
-							<dt className='text-base font-normal text-gray-300'>Coupon ({coupon.code})</dt>
-							<dd className='text-base font-medium text-emerald-400'>-{coupon.discountPercentage}%</dd>
-						</dl>
-					)}
 					<dl className='flex items-center justify-between gap-4 border-t border-gray-600 pt-2'>
 						<dt className='text-base font-bold text-white'>Total</dt>
 						<dd className='text-base font-bold text-emerald-400'>${formattedTotal}</dd>
@@ -173,9 +187,9 @@ const OrderSummary = () => {
 					className='flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300'
 					whileHover={{ scale: 1.05 }}
 					whileTap={{ scale: 0.95 }}
-					onClick={handlePayment}
+					onClick={handlePlaceOrder}
 				>
-					Proceed to Checkout
+					Buy
 				</motion.button>
 
 				<div className='flex items-center justify-center gap-2'>
@@ -189,6 +203,21 @@ const OrderSummary = () => {
 					</Link>
 				</div>
 			</div>
+			
+			<PhoneAuthModal 
+				isOpen={showPhoneAuth} 
+				onClose={() => setShowPhoneAuth(false)}
+				onSuccess={(data) => {
+					// After successful authentication, show address selection
+					setShowAddressSelection(true);
+				}}
+			/>
+			
+			<AddressSelectionModal
+				isOpen={showAddressSelection}
+				onClose={() => setShowAddressSelection(false)}
+				onSelectAddress={handleAddressSelected}
+			/>
 		</motion.div>
 	);
 };

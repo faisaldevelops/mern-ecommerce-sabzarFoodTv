@@ -63,6 +63,8 @@ import couponRoutes from "./routes/coupon.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import orderRoutes from "./routes/order.route.js";
 import analyticsRoutes from "./routes/analytics.route.js";
+import otpRoutes from "./routes/otp.route.js";
+import addressRoutes from "./routes/address.route.js";
 import { connectDB } from "./lib/db.js";
 
 dotenv.config({ path: "./.env", debug: true });
@@ -90,6 +92,8 @@ app.use(cookieParser());
 
 // routes
 app.use("/api/auth", authRoutes);
+app.use("/api/otp", otpRoutes);
+app.use("/api/address", addressRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);

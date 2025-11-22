@@ -9,15 +9,23 @@ const userSchema = new mongoose.Schema(
 		},
 		email: {
 			type: String,
-			required: [true, "Email is required"],
-			unique: true,
+			sparse: true,
 			lowercase: true,
+			trim: true,
+		},
+		phoneNumber: {
+			type: String,
+			unique: true,
+			sparse: true,
 			trim: true,
 		},
 		password: {
 			type: String,
-			required: [true, "Password is required"],
 			minlength: [6, "Password must be at least 6 characters long"],
+		},
+		isGuest: {
+			type: Boolean,
+			default: false,
 		},
 		cartItems: [
 			{
@@ -31,6 +39,31 @@ const userSchema = new mongoose.Schema(
 				},
 			},
 		],
+		addresses: {
+			type: [
+				{
+					name: { type: String, required: true },
+					phoneNumber: { type: String, required: true },
+					email: { type: String },
+					pincode: { type: String, required: true },
+					houseNumber: { type: String, required: true },
+					streetAddress: { type: String, required: true },
+					landmark: { type: String },
+					city: { type: String, required: true },
+					state: { type: String, required: true },
+					createdAt: { type: Date, default: Date.now },
+				},
+			],
+			default: [],
+			validate: [
+				{
+					validator: function (addresses) {
+						return addresses.length <= 5;
+					},
+					message: "Maximum 5 addresses allowed per user",
+				},
+			],
+		},
 		role: {
 			type: String,
 			enum: ["customer", "admin"],
