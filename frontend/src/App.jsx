@@ -13,12 +13,14 @@ import { useEffect } from "react";
 import LoadingSpinner from "./components/LoadingSpinner";
 import CartPage from "./pages/CartPage";
 import { useCartStore } from "./stores/useCartStore";
+import { useAddressStore } from "./stores/useAddressStore";
 import PurchaseSuccessPage from "./pages/PurchaseSuccessPage";
 import PurchaseCancelPage from "./pages/PurchaseCancelPage";
 
 function App() {
 	const { user, checkAuth, checkingAuth } = useUserStore();
 	const { initCart } = useCartStore();
+	const { fetchAddresses } = useAddressStore();
 	
 	useEffect(() => {
 		checkAuth();
@@ -28,6 +30,13 @@ function App() {
 		// Initialize cart from localStorage on app load
 		initCart();
 	}, [initCart]);
+
+	useEffect(() => {
+		// Fetch addresses when user is logged in
+		if (user) {
+			fetchAddresses();
+		}
+	}, [user, fetchAddresses]);
 
 	if (checkingAuth) return <LoadingSpinner />;
 
