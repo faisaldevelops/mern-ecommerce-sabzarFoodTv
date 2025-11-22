@@ -2,6 +2,11 @@ import Product from "../models/product.model.js";
 
 export const getCartProducts = async (req, res) => {
 	try {
+		// If no user is authenticated, return empty cart
+		if (!req.user) {
+			return res.json([]);
+		}
+
 		const products = await Product.find({ _id: { $in: req.user.cartItems } });
 
 		// add quantity for each product
@@ -19,6 +24,11 @@ export const getCartProducts = async (req, res) => {
 
 export const addToCart = async (req, res) => {
 	try {
+		// Require authentication for cart operations
+		if (!req.user) {
+			return res.status(401).json({ message: "Authentication required to add to cart" });
+		}
+
 		const { productId } = req.body;
 		const user = req.user;
 
@@ -39,6 +49,11 @@ export const addToCart = async (req, res) => {
 
 export const removeAllFromCart = async (req, res) => {
 	try {
+		// Require authentication for cart operations
+		if (!req.user) {
+			return res.status(401).json({ message: "Authentication required" });
+		}
+
 		const { productId } = req.body;
 		const user = req.user;
 		if (!productId) {
@@ -55,6 +70,11 @@ export const removeAllFromCart = async (req, res) => {
 
 export const updateQuantity = async (req, res) => {
 	try {
+		// Require authentication for cart operations
+		if (!req.user) {
+			return res.status(401).json({ message: "Authentication required" });
+		}
+
 		const { id: productId } = req.params;
 		const { quantity } = req.body;
 		const user = req.user;

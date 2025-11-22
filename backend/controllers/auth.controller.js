@@ -142,3 +142,57 @@ export const getProfile = async (req, res) => {
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 };
+
+export const createGuestUser = async (req, res) => {
+	const { phoneNumber, email, name } = req.body;
+	try {
+		if (!phoneNumber || !name) {
+			return res.status(400).json({ message: "Phone number and name are required" });
+		}
+
+		// Check if user already exists with this phone number
+		let user = await User.findOne({ phoneNumber });
+		
+		if (user) {
+			// User already exists, return existing user
+			const { accessToken, refreshToken } = generateTokens(user._id);
+			await storeRefreshToken(user._id, refreshToken);
+			setCookies(res, accessToken, refreshToken);
+			
+			return res.status(200).json({
+				_id: user._id,
+				name: user.name,
+				email: user.email,
+				phoneNumber: user.phoneNumber,
+				role: user.role,
+				isGuest: user.isGuest,
+			});
+		}
+
+		// Create new guest user
+		user = await User.create({ 
+			name, 
+			phoneNumber,
+			email: email || undefined,
+			isGuest: true,
+			password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8) // Random password for guest
+		});
+
+		// Authenticate guest user
+		const { accessToken, refreshToken } = generateTokens(user._id);
+		await storeRefreshToken(user._id, refreshToken);
+		setCookies(res, accessToken, refreshToken);
+
+		res.status(201).json({
+			_id: user._id,
+			name: user.name,
+			email: user.email,
+			phoneNumber: user.phoneNumber,
+			role: user.role,
+			isGuest: user.isGuest,
+		});
+	} catch (error) {
+		console.log("Error in createGuestUser controller", error.message);
+		res.status(500).json({ message: error.message });
+	}
+};

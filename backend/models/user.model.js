@@ -9,15 +9,24 @@ const userSchema = new mongoose.Schema(
 		},
 		email: {
 			type: String,
-			required: [true, "Email is required"],
 			unique: true,
+			sparse: true,
 			lowercase: true,
+			trim: true,
+		},
+		phoneNumber: {
+			type: String,
+			unique: true,
+			sparse: true,
 			trim: true,
 		},
 		password: {
 			type: String,
-			required: [true, "Password is required"],
 			minlength: [6, "Password must be at least 6 characters long"],
+		},
+		isGuest: {
+			type: Boolean,
+			default: false,
 		},
 		cartItems: [
 			{

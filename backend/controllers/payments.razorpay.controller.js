@@ -3,6 +3,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import Order from "../models/order.model.js";
 import Coupon from "../models/coupon.model.js";
+import User from "../models/user.model.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -21,6 +22,33 @@ export const createRazorpayOrder = async (req, res) => {
     }
     if (!address) return res.status(400).json({ message: "Address required" });
 
+    // Get or create user based on phone number from address
+    let userId = req.user?._id;
+    
+    if (!userId) {
+      // Create guest user from address info
+      const { phoneNumber, name, email } = address;
+      if (!phoneNumber || !name) {
+        return res.status(400).json({ message: "Phone number and name required in address" });
+      }
+
+      // Check if user with this phone exists
+      let user = await User.findOne({ phoneNumber });
+      
+      if (!user) {
+        // Create new guest user
+        user = await User.create({
+          name,
+          phoneNumber,
+          email: email || undefined,
+          isGuest: true,
+          password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
+        });
+      }
+      
+      userId = user._id;
+    }
+
     // compute total in paise (integer)
     let totalPaise = 0;
     for (const p of products) {
@@ -31,7 +59,7 @@ export const createRazorpayOrder = async (req, res) => {
 
     // apply coupon server-side if any
     let coupon = null;
-    if (couponCode) {
+    if (couponCode && req.user) {
       coupon = await Coupon.findOne({ code: couponCode, userId: req.user._id, isActive: true });
       if (coupon) {
         const discountPaise = Math.round((totalPaise * coupon.discountPercentage) / 100);
@@ -42,7 +70,7 @@ export const createRazorpayOrder = async (req, res) => {
     const options = {
       amount: totalPaise,
       currency: "INR",
-      receipt: `rcpt_${Date.now().toString(36)}_${req.user._id.toString().slice(-6)}`,
+      receipt: `rcpt_${Date.now().toString(36)}_${userId.toString().slice(-6)}`,
       payment_capture: 1, // auto-capture
     };
 
@@ -50,7 +78,7 @@ export const createRazorpayOrder = async (req, res) => {
 
     // Save a pending order locally for idempotency/reference
     const pendingOrder = new Order({
-      user: req.user._id,
+      user: userId,
       products: products.map((p) => ({
         product: p._id || p.id,
         quantity: p.quantity,
@@ -113,8 +141,14 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     if (!order) {
       // create fallback order if pending wasn't saved (rare)
+      // Try to get userId from req.user or from payment metadata
+      const userId = req.user?._id;
+      if (!userId) {
+        return res.status(400).json({ success: false, message: "Cannot create order: user not found" });
+      }
+
       order = new Order({
-        user: req.user._id,
+        user: userId,
         products: [], // ideally you passed products earlier and saved pendingOrder
         totalAmount: payment.amount / 100,
         razorpayOrderId: razorpay_order_id,

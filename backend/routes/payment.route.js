@@ -12,7 +12,7 @@
 
 // routes/payment.route.js
 import express from "express";
-import { protectRoute } from "../middleware/auth.middleware.js";
+import { optionalAuth } from "../middleware/auth.middleware.js";
 import {
   createRazorpayOrder,
   verifyRazorpayPayment,
@@ -21,9 +21,9 @@ import {
 
 const router = express.Router();
 
-// Protected endpoints (client calls these)
-router.post("/razorpay-create-order", protectRoute, createRazorpayOrder);
-router.post("/razorpay-verify", protectRoute, verifyRazorpayPayment);
+// Allow both authenticated and guest users (optionalAuth instead of protectRoute)
+router.post("/razorpay-create-order", optionalAuth, createRazorpayOrder);
+router.post("/razorpay-verify", optionalAuth, verifyRazorpayPayment);
 
 // Webhook endpoint (Razorpay -> public)
 router.post("/razorpay-webhook", razorpayWebhook);
