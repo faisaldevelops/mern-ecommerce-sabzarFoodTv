@@ -73,34 +73,37 @@ const SignUpPage = () => {
 	};
 
 	return (
-		<div className='flex flex-col justify-center py-12 sm:px-6 lg:px-8'>
+		<div className='min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-900'>
 			<motion.div
 				className='sm:mx-auto sm:w-full sm:max-w-md'
 				initial={{ opacity: 0, y: -20 }}
 				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.8 }}
+				transition={{ duration: 0.5 }}
 			>
-				<h2 className='mt-6 text-center text-3xl font-extrabold text-emerald-400'>
-					{step === "phone" ? "Create your account" : "Verify OTP"}
+				<h2 className='text-center text-4xl font-bold text-emerald-400 mb-2'>
+					{step === "phone" ? "Create Account" : "Verify Code"}
 				</h2>
+				<p className='text-center text-sm text-gray-400'>
+					{step === "phone" ? "Enter your phone number to get started" : `Code sent to +91${phoneNumber}`}
+				</p>
 			</motion.div>
 
 			<motion.div
 				className='mt-8 sm:mx-auto sm:w-full sm:max-w-md'
 				initial={{ opacity: 0, y: 20 }}
 				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.8, delay: 0.2 }}
+				transition={{ duration: 0.5, delay: 0.1 }}
 			>
-				<div className='bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10'>
+				<div className='bg-gray-800 py-8 px-6 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-700'>
 					{step === "phone" ? (
-						<form onSubmit={handleSendOTP} className='space-y-6'>
+						<form onSubmit={handleSendOTP} className='space-y-5'>
 							<div>
-								<label htmlFor='phoneNumber' className='block text-sm font-medium text-gray-300'>
+								<label htmlFor='phoneNumber' className='block text-sm font-medium text-gray-300 mb-2'>
 									Phone Number
 								</label>
-								<div className='mt-1 relative rounded-md shadow-sm'>
+								<div className='relative'>
 									<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-										<Phone className='h-5 w-5 text-gray-400' aria-hidden='true' />
+										<Phone className='h-5 w-5 text-gray-500' />
 									</div>
 									<input
 										id='phoneNumber'
@@ -108,47 +111,44 @@ const SignUpPage = () => {
 										required
 										value={phoneNumber}
 										onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-										className='block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 
-										rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 
-										focus:border-emerald-500 sm:text-sm'
-										placeholder='Enter 10-digit mobile number'
+										className='block w-full pl-10 pr-3 py-3 bg-gray-700/50 border border-gray-600 
+										rounded-xl shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 
+										focus:border-transparent sm:text-sm transition-all'
+										placeholder='10-digit mobile number'
 									/>
 								</div>
-								<p className='mt-1 text-xs text-gray-400'>
-									We'll send you a verification code
-								</p>
 							</div>
 
 							<button
 								type='submit'
-								className='w-full flex justify-center py-2 px-4 border border-transparent 
-								rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600
-								hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
-								focus:ring-emerald-500 transition duration-150 ease-in-out disabled:opacity-50'
+								className='w-full flex justify-center items-center py-3 px-4 
+								rounded-xl shadow-lg text-sm font-semibold text-white bg-emerald-600
+								hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-800
+								transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
 								disabled={loading}
 							>
 								{loading ? (
 									<>
-										<Loader className='mr-2 h-5 w-5 animate-spin' aria-hidden='true' />
+										<Loader className='mr-2 h-5 w-5 animate-spin' />
 										Sending...
 									</>
 								) : (
 									<>
-										<Phone className='mr-2 h-5 w-5' aria-hidden='true' />
-										Send OTP
+										<Phone className='mr-2 h-5 w-5' />
+										Send Verification Code
 									</>
 								)}
 							</button>
 						</form>
 					) : (
-						<form onSubmit={handleVerifyOTP} className='space-y-6'>
+						<form onSubmit={handleVerifyOTP} className='space-y-5'>
 							<div>
-								<label htmlFor='name' className='block text-sm font-medium text-gray-300'>
+								<label htmlFor='name' className='block text-sm font-medium text-gray-300 mb-2'>
 									Full Name
 								</label>
-								<div className='mt-1 relative rounded-md shadow-sm'>
+								<div className='relative'>
 									<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-										<User className='h-5 w-5 text-gray-400' aria-hidden='true' />
+										<User className='h-5 w-5 text-gray-500' />
 									</div>
 									<input
 										id='name'
@@ -156,21 +156,21 @@ const SignUpPage = () => {
 										required
 										value={name}
 										onChange={(e) => setName(e.target.value)}
-										className='block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 
-										rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 
-										focus:border-emerald-500 sm:text-sm'
+										className='block w-full pl-10 pr-3 py-3 bg-gray-700/50 border border-gray-600 
+										rounded-xl shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 
+										focus:border-transparent sm:text-sm transition-all'
 										placeholder='John Doe'
 									/>
 								</div>
 							</div>
 
 							<div>
-								<label htmlFor='otp' className='block text-sm font-medium text-gray-300'>
-									Enter OTP sent to +91{phoneNumber}
+								<label htmlFor='otp' className='block text-sm font-medium text-gray-300 mb-2'>
+									Verification Code
 								</label>
-								<div className='mt-1 relative rounded-md shadow-sm'>
+								<div className='relative'>
 									<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-										<KeyRound className='h-5 w-5 text-gray-400' aria-hidden='true' />
+										<KeyRound className='h-5 w-5 text-gray-500' />
 									</div>
 									<input
 										id='otp'
@@ -178,10 +178,10 @@ const SignUpPage = () => {
 										required
 										value={otp}
 										onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-										className='block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 
-										rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 
-										focus:border-emerald-500 sm:text-sm text-center text-2xl tracking-widest'
-										placeholder='Enter 6-digit OTP'
+										className='block w-full pl-10 pr-3 py-3 bg-gray-700/50 border border-gray-600 
+										rounded-xl shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 
+										focus:border-transparent sm:text-sm text-center text-lg tracking-widest transition-all'
+										placeholder='000000'
 										maxLength={6}
 									/>
 								</div>
@@ -189,21 +189,21 @@ const SignUpPage = () => {
 
 							<button
 								type='submit'
-								className='w-full flex justify-center py-2 px-4 border border-transparent 
-								rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600
-								hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
-								focus:ring-emerald-500 transition duration-150 ease-in-out disabled:opacity-50'
+								className='w-full flex justify-center items-center py-3 px-4 
+								rounded-xl shadow-lg text-sm font-semibold text-white bg-emerald-600
+								hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-800
+								transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
 								disabled={loading}
 							>
 								{loading ? (
 									<>
-										<Loader className='mr-2 h-5 w-5 animate-spin' aria-hidden='true' />
+										<Loader className='mr-2 h-5 w-5 animate-spin' />
 										Verifying...
 									</>
 								) : (
 									<>
-										<KeyRound className='mr-2 h-5 w-5' aria-hidden='true' />
-										Verify & Sign Up
+										<KeyRound className='mr-2 h-5 w-5' />
+										Verify & Create Account
 									</>
 								)}
 							</button>
@@ -214,20 +214,22 @@ const SignUpPage = () => {
 									setStep("phone");
 									setOtp("");
 								}}
-								className="w-full text-sm text-emerald-400 hover:text-emerald-300"
+								className="w-full text-sm text-emerald-400 hover:text-emerald-300 transition-colors py-2"
 								disabled={loading}
 							>
-								Change phone number
+								← Change phone number
 							</button>
 						</form>
 					)}
 
-					<p className='mt-8 text-center text-sm text-gray-400'>
-						Already have an account?{" "}
-						<Link to='/login' className='font-medium text-emerald-400 hover:text-emerald-300'>
-							Login here <ArrowRight className='inline h-4 w-4' />
-						</Link>
-					</p>
+					<div className='mt-6 text-center'>
+						<p className='text-sm text-gray-400'>
+							Already have an account?{" "}
+							<Link to='/login' className='font-medium text-emerald-400 hover:text-emerald-300 transition-colors'>
+								Sign in <ArrowRight className='inline h-4 w-4' />
+							</Link>
+						</p>
+					</div>
 				</div>
 			</motion.div>
 		</div>
