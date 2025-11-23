@@ -5,6 +5,7 @@ import { Phone, KeyRound, ArrowRight, Loader } from "lucide-react";
 import axios from "../lib/axios";
 import toast from "react-hot-toast";
 import { useUserStore } from "../stores/useUserStore";
+import { useCartStore } from "../stores/useCartStore";
 
 const LoginPage = () => {
 	const [step, setStep] = useState("phone"); // "phone" or "otp"
@@ -12,6 +13,7 @@ const LoginPage = () => {
 	const [otp, setOtp] = useState("");
 	const [loading, setLoading] = useState(false);
 	const { checkAuth } = useUserStore();
+	const { syncGuestCart } = useCartStore();
 
 	const handleSendOTP = async (e) => {
 		e.preventDefault();
@@ -58,6 +60,9 @@ const LoginPage = () => {
 			
 			// Refresh auth state
 			await checkAuth();
+			
+			// Sync guest cart to database after successful login
+			await syncGuestCart();
 		} catch (error) {
 			toast.error(error.response?.data?.message || "Failed to verify OTP");
 		} finally {

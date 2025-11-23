@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import axios from "../lib/axios";
 import toast from "react-hot-toast";
 import { useUserStore } from "../stores/useUserStore";
+import { useCartStore } from "../stores/useCartStore";
 
 const SignUpPage = () => {
 	const [step, setStep] = useState("phone"); // "phone" or "otp"
@@ -13,6 +14,7 @@ const SignUpPage = () => {
 	const [name, setName] = useState("");
 	const [loading, setLoading] = useState(false);
 	const { checkAuth } = useUserStore();
+	const { syncGuestCart } = useCartStore();
 
 	const handleSendOTP = async (e) => {
 		e.preventDefault();
@@ -65,6 +67,9 @@ const SignUpPage = () => {
 			
 			// Refresh auth state
 			await checkAuth();
+			
+			// Sync guest cart to database after successful signup
+			await syncGuestCart();
 		} catch (error) {
 			toast.error(error.response?.data?.message || "Failed to verify OTP");
 		} finally {

@@ -5,6 +5,7 @@ import axios from "../lib/axios";
 import toast from "react-hot-toast";
 import { useUserStore } from "../stores/useUserStore";
 import { useAddressStore } from "../stores/useAddressStore";
+import { useCartStore } from "../stores/useCartStore";
 
 const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [step, setStep] = useState("phone"); // "phone" or "otp"
@@ -14,6 +15,7 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const { checkAuth } = useUserStore();
   const { fetchAddresses } = useAddressStore();
+  const { syncGuestCart } = useCartStore();
 
   const handleSendOTP = async (e) => {
     e.preventDefault();
@@ -62,6 +64,9 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
       
       // Refresh auth state
       await checkAuth();
+      
+      // Sync guest cart to database after successful authentication
+      await syncGuestCart();
       
       // Fetch addresses for the logged-in user
       await fetchAddresses();
