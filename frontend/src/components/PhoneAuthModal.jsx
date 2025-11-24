@@ -71,13 +71,13 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
       // Fetch addresses for the logged-in user
       await fetchAddresses();
       
-      // Close modal first
-      handleClose();
-      
-      // Call success callback after modal is closed
+      // Call success callback BEFORE closing modal
       if (onSuccess) {
-        onSuccess(response.data);
+        await onSuccess(response.data);
       }
+      
+      // Close modal after callback is done
+      handleClose();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to verify OTP");
     } finally {

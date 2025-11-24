@@ -64,13 +64,10 @@ const OrderSummary = () => {
 		setShowAddressSelection(true);
 	};
 
-	const handleAuthSuccess = () => {
-		// Close phone auth modal
+	const handleAuthSuccess = async () => {
+		// Close phone auth modal and immediately open address selection
 		setShowPhoneAuth(false);
-		// Wait a bit for modal to close, then open address selection
-		setTimeout(() => {
-			setShowAddressSelection(true);
-		}, 100);
+		setShowAddressSelection(true);
 	};
 
 	const handleAddressSelected = (address) => {
