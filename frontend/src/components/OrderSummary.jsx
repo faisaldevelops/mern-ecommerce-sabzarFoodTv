@@ -175,14 +175,18 @@ const OrderSummary = () => {
 
 	// Handle reduce quantity action from insufficient stock modal
 	const handleReduceQuantity = async (items) => {
-		for (const item of items) {
-			if (item.available > 0 && item.productId) {
-				await updateQuantity(item.productId.toString(), item.available);
-			} else if (item.available === 0 && item.productId) {
-				// Remove item from cart
-				await updateQuantity(item.productId.toString(), 0);
-			}
-		}
+		// Use Promise.all for parallel updates
+		await Promise.all(
+			items.map(item => {
+				if (item.available > 0 && item.productId) {
+					return updateQuantity(item.productId.toString(), item.available);
+				} else if (item.available === 0 && item.productId) {
+					// Remove item from cart
+					return updateQuantity(item.productId.toString(), 0);
+				}
+				return Promise.resolve();
+			})
+		);
 		setShowInsufficientStock(false);
 		toast.success("Cart updated with available quantities");
 	};

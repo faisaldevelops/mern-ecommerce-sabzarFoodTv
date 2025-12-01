@@ -112,9 +112,18 @@ export const releaseReservedStock = async (products) => {
     const productId = item.product || item._id || item.id;
     const qty = item.quantity || 1;
     
+    // Use $max to prevent reservedQuantity from going below 0
     await Product.findByIdAndUpdate(
       productId,
-      { $inc: { reservedQuantity: -qty } }
+      [
+        {
+          $set: {
+            reservedQuantity: {
+              $max: [0, { $subtract: ["$reservedQuantity", qty] }]
+            }
+          }
+        }
+      ]
     );
   }
 };
@@ -332,8 +341,10 @@ export const cancelHoldOrder = async (orderId) => {
 };
 
 // Start the hold expiry cleanup job (runs every minute)
+let holdExpiryIntervalId = null;
+
 export const startHoldExpiryJob = () => {
-  console.log("Starting hold expiry cleanup job (runs every 60 seconds)");
+  console.log("Starting hold expiry cleanup job (runs every minute)");
   
   // Run immediately on startup
   releaseExpiredHolds().catch(err => {
@@ -341,11 +352,20 @@ export const startHoldExpiryJob = () => {
   });
   
   // Then run every minute
-  setInterval(async () => {
+  holdExpiryIntervalId = setInterval(async () => {
     try {
       await releaseExpiredHolds();
     } catch (err) {
       console.error("Error in hold expiry cleanup job:", err);
     }
-  }, 60 * 1000); // Every 60 seconds
+  }, 60 * 1000);
+};
+
+// Stop the hold expiry cleanup job (for graceful shutdown)
+export const stopHoldExpiryJob = () => {
+  if (holdExpiryIntervalId) {
+    clearInterval(holdExpiryIntervalId);
+    holdExpiryIntervalId = null;
+    console.log("Hold expiry cleanup job stopped");
+  }
 };

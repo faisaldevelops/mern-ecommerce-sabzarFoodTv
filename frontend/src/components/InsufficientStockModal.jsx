@@ -127,7 +127,7 @@ const InsufficientStockModal = ({
 
           {/* Info Text */}
           <p className="mt-4 text-center text-xs text-stone-400">
-            Stock levels change frequently. Items in your cart are not reserved until payment is complete.
+            During checkout, items are reserved for 15 minutes to ensure availability.
           </p>
         </motion.div>
       </div>
