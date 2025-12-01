@@ -17,6 +17,8 @@ import {
   createRazorpayOrder,
   verifyRazorpayPayment,
   razorpayWebhook,
+  getHoldStatus,
+  cancelHold,
 } from "../controllers/payments.razorpay.controller.js";
 
 const router = express.Router();
@@ -24,6 +26,8 @@ const router = express.Router();
 // Allow both authenticated and guest users (optionalAuth instead of protectRoute)
 router.post("/razorpay-create-order", optionalAuth, createRazorpayOrder);
 router.post("/razorpay-verify", optionalAuth, verifyRazorpayPayment);
+router.get("/hold-status", optionalAuth, getHoldStatus);
+router.post("/cancel-hold", optionalAuth, cancelHold);
 
 // Webhook endpoint (Razorpay -> public)
 router.post("/razorpay-webhook", razorpayWebhook);
