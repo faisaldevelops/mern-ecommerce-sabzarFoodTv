@@ -62,12 +62,55 @@ def check_dependencies():
     return True
 
 
+def check_server_running():
+    """Check if the backend server is running."""
+    import requests
+    from config import API_BASE_URL
+    
+    try:
+        response = requests.get(f"{API_BASE_URL}/products", timeout=5)
+        return True, API_BASE_URL
+    except requests.exceptions.ConnectionError:
+        return False, API_BASE_URL
+    except Exception as e:
+        return False, API_BASE_URL
+
+
+def print_server_not_running_error(api_url):
+    """Print helpful error message when server is not running."""
+    print("=" * 70)
+    print("ERROR: Backend server is not running!")
+    print("=" * 70)
+    print()
+    print("The tests require the backend server to be running.")
+    print()
+    print("Please start the server first:")
+    print("  1. Open a new terminal")
+    print("  2. Navigate to the project root directory")
+    print("  3. Run: npm run dev")
+    print("  4. Wait for: 'Server is running on http://localhost:5000'")
+    print("  5. Then run the tests again in this terminal")
+    print()
+    print(f"Current API URL: {api_url}")
+    print("(Change via TEST_API_URL environment variable if needed)")
+    print("=" * 70)
+
+
 def run_tests(args):
     """Run pytest with given arguments."""
     print_header()
     
     if not check_dependencies():
         return 1
+    
+    # Check if server is running
+    server_running, api_url = check_server_running()
+    if not server_running:
+        print_server_not_running_error(api_url)
+        return 1
+    
+    print(f"Server check: OK ({api_url})")
+    print()
         
     # Build pytest command
     cmd = ['python', '-m', 'pytest']

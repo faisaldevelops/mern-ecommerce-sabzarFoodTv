@@ -2,6 +2,19 @@
 
 A comprehensive Python test framework for testing the e-commerce backend API, including stock hold system, concurrent checkouts, authentication, cart, products, and order management.
 
+## Prerequisites
+
+**⚠️ IMPORTANT: The backend server must be running before running tests!**
+
+```bash
+# Terminal 1: Start the backend server
+cd /path/to/project
+npm run dev
+# Server should be running on http://localhost:5000
+```
+
+Then in a separate terminal, run the tests.
+
 ## Features
 
 - **Authentication Tests**: User signup, login, logout, guest users
@@ -38,7 +51,17 @@ A comprehensive Python test framework for testing the e-commerce backend API, in
 
 ## Usage
 
-### Run All Tests
+### Step 1: Start the Backend Server
+
+```bash
+# In the project root directory
+npm run dev
+```
+
+Wait until you see: `Server is running on http://localhost:5000`
+
+### Step 2: Run Tests (in a separate terminal)
+
 ```bash
 cd tests
 python run_tests.py
