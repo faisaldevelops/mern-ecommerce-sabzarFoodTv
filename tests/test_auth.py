@@ -27,7 +27,9 @@ class TestAuthentication:
         
         assert response.status_code == 201, f"Signup failed: {response.text}"
         data = response.json()
-        assert 'accessToken' in data or 'user' in data
+        # API returns user data directly with _id, name, email, role
+        assert '_id' in data, "Response should contain _id"
+        assert 'email' in data, "Response should contain email"
         
     def test_signup_duplicate_email(self):
         """Test registration with duplicate email fails."""
@@ -82,18 +84,20 @@ class TestAuthentication:
         )
         assert signup_response.status_code == 201
         
-        # Logout
-        self.client.logout()
+        # Create a new client for login (simulates different session)
+        login_client = APIClient()
         
         # Login with credentials
-        login_response = self.client.login(
+        login_response = login_client.login(
             email=user_data['email'],
             password=user_data['password']
         )
         
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
         data = login_response.json()
-        assert 'accessToken' in data or 'user' in data
+        # API returns user data directly with _id, name, email, role
+        assert '_id' in data, "Response should contain _id"
+        assert 'email' in data, "Response should contain email"
         
     def test_login_wrong_password(self):
         """Test login with wrong password fails."""

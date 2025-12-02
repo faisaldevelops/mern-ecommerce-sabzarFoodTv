@@ -15,18 +15,15 @@ class APIClient:
     def __init__(self, base_url: str = API_BASE_URL):
         self.base_url = base_url.rstrip('/')
         self.session = requests.Session()
-        self.access_token: Optional[str] = None
-        self.refresh_token: Optional[str] = None
         self.user: Optional[Dict] = None
         
     def _get_headers(self, custom_headers: Optional[Dict] = None) -> Dict:
-        """Build request headers with authentication if available."""
+        """Build request headers."""
         headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         }
-        if self.access_token:
-            headers['Authorization'] = f'Bearer {self.access_token}'
+        # Authentication is handled via cookies in session
         if custom_headers:
             headers.update(custom_headers)
         return headers
@@ -85,9 +82,8 @@ class APIClient:
         })
         if response.status_code == 201:
             data = response.json()
-            self.access_token = data.get('accessToken')
-            self.refresh_token = data.get('refreshToken')
-            self.user = data.get('user')
+            # API returns user data directly, tokens are in cookies (handled by session)
+            self.user = data
         return response
     
     def login(self, email: str, password: str) -> requests.Response:
@@ -98,16 +94,13 @@ class APIClient:
         })
         if response.status_code == 200:
             data = response.json()
-            self.access_token = data.get('accessToken')
-            self.refresh_token = data.get('refreshToken')
-            self.user = data.get('user')
+            # API returns user data directly, tokens are in cookies (handled by session)
+            self.user = data
         return response
     
     def logout(self) -> requests.Response:
         """Logout the current user."""
         response = self.post('/auth/logout')
-        self.access_token = None
-        self.refresh_token = None
         self.user = None
         return response
     
