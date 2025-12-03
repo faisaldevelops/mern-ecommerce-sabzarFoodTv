@@ -17,7 +17,8 @@
 		"test:e2e:cart": "playwright test cart.spec.js",
 		"test:e2e:checkout": "playwright test checkout.spec.js",
 		"test:e2e:concurrent": "playwright test concurrent-orders.spec.js",
-		"test:e2e:products": "playwright test products.spec.js"
+		"test:e2e:products": "playwright test products.spec.js",
+		"test:e2e:edge": "playwright test edge-cases.spec.js"
 	},
 	"keywords": [],
 	"author": "",
