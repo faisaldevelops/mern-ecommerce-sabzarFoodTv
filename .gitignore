@@ -51,3 +51,8 @@ htmlcov/
 .nox/
 venv/
 ENV/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/

@@ -7,7 +7,17 @@
 		"dev": "nodemon backend/server.js",
 		"start": "node backend/server.js",
 		"build": "npm install && npm install --prefix frontend && npm run build --prefix frontend",
-		"cleanup:reservations": "node backend/scripts/cleanupStuckReservations.js"
+		"cleanup:reservations": "node backend/scripts/cleanupStuckReservations.js",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:e2e:headed": "playwright test --headed",
+		"test:e2e:debug": "playwright test --debug",
+		"test:e2e:report": "playwright show-report",
+		"test:e2e:auth": "playwright test auth.spec.js",
+		"test:e2e:cart": "playwright test cart.spec.js",
+		"test:e2e:checkout": "playwright test checkout.spec.js",
+		"test:e2e:concurrent": "playwright test concurrent-orders.spec.js",
+		"test:e2e:products": "playwright test products.spec.js"
 	},
 	"keywords": [],
 	"author": "",
@@ -29,6 +39,9 @@
 		"twilio": "^5.10.6"
 	},
 	"devDependencies": {
-		"nodemon": "^3.1.4"
+		"@faker-js/faker": "^10.1.0",
+		"@playwright/test": "^1.57.0",
+		"nodemon": "^3.1.4",
+		"playwright": "^1.57.0"
 	}
 }
