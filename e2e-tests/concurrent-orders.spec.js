@@ -401,7 +401,8 @@ test.describe('Concurrent Orders and Race Conditions', () => {
           await checkoutPage1.cancelHoldViaAPI(localOrderId);
 
           // User 2 should now be able to checkout (if they try again)
-          await page.waitForTimeout(1000);
+          // Note: Small delay needed for stock to be released in backend
+          await new Promise(resolve => setTimeout(resolve, 1000));
           const order2RetryResponse = await checkoutPage2.createOrderViaAPI(orderProducts, generateAddress());
           
           // After cancellation, stock should be available

@@ -28,8 +28,9 @@ export class AuthPage {
   }
 
   async loginViaAPI(email, password) {
-    const apiURL = this.page.context()._options.baseURL.replace('5173', '5000');
-    const response = await this.page.request.post(`${apiURL}/api/auth/login`, {
+    const { getApiURL } = await import('./helpers.js');
+    const apiURL = getApiURL(this.page);
+    const response = await this.page.request.post(`${apiURL}/auth/login`, {
       data: { email, password },
     });
     return response;
@@ -47,8 +48,9 @@ export class AuthPage {
   }
 
   async signupViaAPI(name, email, password) {
-    const apiURL = this.page.context()._options.baseURL.replace('5173', '5000');
-    const response = await this.page.request.post(`${apiURL}/api/auth/signup`, {
+    const { getApiURL } = await import('./helpers.js');
+    const apiURL = getApiURL(this.page);
+    const response = await this.page.request.post(`${apiURL}/auth/signup`, {
       data: { name, email, password },
     });
     return response;
@@ -61,8 +63,9 @@ export class AuthPage {
   }
 
   async logoutViaAPI() {
-    const apiURL = this.page.context()._options.baseURL.replace('5173', '5000');
-    const response = await this.page.request.post(`${apiURL}/api/auth/logout`);
+    const { getApiURL } = await import('./helpers.js');
+    const apiURL = getApiURL(this.page);
+    const response = await this.page.request.post(`${apiURL}/auth/logout`);
     return response;
   }
 

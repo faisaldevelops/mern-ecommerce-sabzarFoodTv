@@ -33,7 +33,7 @@ export function generateAddress() {
     state: faker.location.state(),
     zipCode: faker.location.zipCode(),
     country: faker.location.country(),
-    phoneNumber: faker.phone.number('##########'),
+    phoneNumber: faker.string.numeric(10),
   };
 }
 
@@ -134,6 +134,14 @@ export async function clearBrowserStorage(page) {
     localStorage.clear();
     sessionStorage.clear();
   });
+}
+
+/**
+ * Get API URL from page context
+ */
+export function getApiURL(page) {
+  const baseURL = page.context()._options.baseURL || 'http://localhost:5173';
+  return baseURL.replace('5173', '5000') + '/api';
 }
 
 /**

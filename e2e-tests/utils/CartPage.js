@@ -150,22 +150,25 @@ export class CartPage {
 
   // API operations for faster setup
   async addToCartViaAPI(productId, quantity = 1) {
-    const apiURL = this.page.context()._options.baseURL.replace('5173', '5000');
-    const response = await this.page.request.post(`${apiURL}/api/cart`, {
+    const { getApiURL } = await import('./helpers.js');
+    const apiURL = getApiURL(this.page);
+    const response = await this.page.request.post(`${apiURL}/cart`, {
       data: { productId, quantity },
     });
     return response;
   }
 
   async clearCartViaAPI() {
-    const apiURL = this.page.context()._options.baseURL.replace('5173', '5000');
-    const response = await this.page.request.delete(`${apiURL}/api/cart`);
+    const { getApiURL } = await import('./helpers.js');
+    const apiURL = getApiURL(this.page);
+    const response = await this.page.request.delete(`${apiURL}/cart`);
     return response;
   }
 
   async getCartViaAPI() {
-    const apiURL = this.page.context()._options.baseURL.replace('5173', '5000');
-    const response = await this.page.request.get(`${apiURL}/api/cart`);
+    const { getApiURL } = await import('./helpers.js');
+    const apiURL = getApiURL(this.page);
+    const response = await this.page.request.get(`${apiURL}/cart`);
     return response;
   }
 

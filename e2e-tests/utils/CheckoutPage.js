@@ -135,10 +135,11 @@ export class CheckoutPage {
 
   // API operations
   async createOrderViaAPI(products, address, paymentMethod = 'razorpay') {
-    const apiURL = this.page.context()._options.baseURL.replace('5173', '5000');
+    const { getApiURL } = await import('./helpers.js');
+    const apiURL = getApiURL(this.page);
     
     // Create Razorpay order
-    const response = await this.page.request.post(`${apiURL}/api/payment/create-razorpay-order`, {
+    const response = await this.page.request.post(`${apiURL}/payment/create-razorpay-order`, {
       data: {
         products,
         address,
@@ -149,14 +150,16 @@ export class CheckoutPage {
   }
 
   async getHoldStatusViaAPI(localOrderId) {
-    const apiURL = this.page.context()._options.baseURL.replace('5173', '5000');
-    const response = await this.page.request.get(`${apiURL}/api/payment/hold-status/${localOrderId}`);
+    const { getApiURL } = await import('./helpers.js');
+    const apiURL = getApiURL(this.page);
+    const response = await this.page.request.get(`${apiURL}/payment/hold-status/${localOrderId}`);
     return response;
   }
 
   async cancelHoldViaAPI(localOrderId) {
-    const apiURL = this.page.context()._options.baseURL.replace('5173', '5000');
-    const response = await this.page.request.post(`${apiURL}/api/payment/cancel-hold`, {
+    const { getApiURL } = await import('./helpers.js');
+    const apiURL = getApiURL(this.page);
+    const response = await this.page.request.post(`${apiURL}/payment/cancel-hold`, {
       data: { localOrderId },
     });
     return response;
