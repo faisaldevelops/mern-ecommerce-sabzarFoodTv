@@ -2,6 +2,8 @@
  * Page Object Model for authentication-related pages
  */
 
+import { getApiURL } from './helpers.js';
+
 export class AuthPage {
   constructor(page) {
     this.page = page;
@@ -28,7 +30,6 @@ export class AuthPage {
   }
 
   async loginViaAPI(email, password) {
-    const { getApiURL } = await import('./helpers.js');
     const apiURL = getApiURL(this.page);
     const response = await this.page.request.post(`${apiURL}/auth/login`, {
       data: { email, password },
@@ -48,7 +49,6 @@ export class AuthPage {
   }
 
   async signupViaAPI(name, email, password) {
-    const { getApiURL } = await import('./helpers.js');
     const apiURL = getApiURL(this.page);
     const response = await this.page.request.post(`${apiURL}/auth/signup`, {
       data: { name, email, password },
@@ -63,7 +63,6 @@ export class AuthPage {
   }
 
   async logoutViaAPI() {
-    const { getApiURL } = await import('./helpers.js');
     const apiURL = getApiURL(this.page);
     const response = await this.page.request.post(`${apiURL}/auth/logout`);
     return response;

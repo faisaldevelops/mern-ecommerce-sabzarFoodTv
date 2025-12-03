@@ -141,7 +141,14 @@ export async function clearBrowserStorage(page) {
  */
 export function getApiURL(page) {
   const baseURL = page.context()._options.baseURL || 'http://localhost:5173';
-  return baseURL.replace('5173', '5000') + '/api';
+  try {
+    const url = new URL(baseURL);
+    url.port = '5000';
+    return url.toString().replace(/\/$/, '') + '/api';
+  } catch (error) {
+    // Fallback to simple replacement if URL parsing fails
+    return baseURL.replace('5173', '5000') + '/api';
+  }
 }
 
 /**

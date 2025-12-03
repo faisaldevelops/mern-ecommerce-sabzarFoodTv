@@ -2,6 +2,8 @@
  * Page Object Model for cart operations
  */
 
+import { getApiURL } from './helpers.js';
+
 export class CartPage {
   constructor(page) {
     this.page = page;
@@ -150,7 +152,6 @@ export class CartPage {
 
   // API operations for faster setup
   async addToCartViaAPI(productId, quantity = 1) {
-    const { getApiURL } = await import('./helpers.js');
     const apiURL = getApiURL(this.page);
     const response = await this.page.request.post(`${apiURL}/cart`, {
       data: { productId, quantity },
@@ -159,14 +160,12 @@ export class CartPage {
   }
 
   async clearCartViaAPI() {
-    const { getApiURL } = await import('./helpers.js');
     const apiURL = getApiURL(this.page);
     const response = await this.page.request.delete(`${apiURL}/cart`);
     return response;
   }
 
   async getCartViaAPI() {
-    const { getApiURL } = await import('./helpers.js');
     const apiURL = getApiURL(this.page);
     const response = await this.page.request.get(`${apiURL}/cart`);
     return response;

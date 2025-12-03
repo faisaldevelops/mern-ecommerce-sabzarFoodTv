@@ -2,6 +2,8 @@
  * Page Object Model for checkout and order operations
  */
 
+import { getApiURL } from './helpers.js';
+
 export class CheckoutPage {
   constructor(page) {
     this.page = page;
@@ -135,7 +137,6 @@ export class CheckoutPage {
 
   // API operations
   async createOrderViaAPI(products, address, paymentMethod = 'razorpay') {
-    const { getApiURL } = await import('./helpers.js');
     const apiURL = getApiURL(this.page);
     
     // Create Razorpay order
@@ -150,14 +151,12 @@ export class CheckoutPage {
   }
 
   async getHoldStatusViaAPI(localOrderId) {
-    const { getApiURL } = await import('./helpers.js');
     const apiURL = getApiURL(this.page);
     const response = await this.page.request.get(`${apiURL}/payment/hold-status/${localOrderId}`);
     return response;
   }
 
   async cancelHoldViaAPI(localOrderId) {
-    const { getApiURL } = await import('./helpers.js');
     const apiURL = getApiURL(this.page);
     const response = await this.page.request.post(`${apiURL}/payment/cancel-hold`, {
       data: { localOrderId },

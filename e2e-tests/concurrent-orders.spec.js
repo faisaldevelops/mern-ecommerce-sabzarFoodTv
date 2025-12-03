@@ -5,7 +5,10 @@ import { CheckoutPage } from './utils/CheckoutPage.js';
 import { generateUserData, generateAddress, executeConcurrent } from './utils/helpers.js';
 
 test.describe('Concurrent Orders and Race Conditions', () => {
-  test.describe.configure({ mode: 'serial' }); // Run these tests serially to avoid interference
+  // Note: Serial mode prevents test interference, not actual concurrency testing
+  // Each test internally creates multiple concurrent operations (browser contexts)
+  // to test true race conditions. Serial mode just prevents cross-test interference.
+  test.describe.configure({ mode: 'serial' });
 
   test.describe('Concurrent Checkout with Limited Stock', () => {
     test('should handle concurrent checkouts for same product with limited stock', async ({ browser }) => {
