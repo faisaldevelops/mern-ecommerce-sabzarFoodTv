@@ -186,9 +186,11 @@ export const updateProduct = async (req, res) => {
 		if (image && image !== product.image) {
 			// Delete old image from cloudinary if it exists
 			if (product.image) {
-				const publicId = product.image.split("/").pop().split(".")[0];
 				try {
-					await cloudinary.uploader.destroy(`products/${publicId}`);
+					const publicId = product.image.split("/").pop().split(".")[0];
+					if (publicId) {
+						await cloudinary.uploader.destroy(`products/${publicId}`);
+					}
 				} catch (error) {
 					console.log("error deleting old image from cloudinary", error);
 				}
