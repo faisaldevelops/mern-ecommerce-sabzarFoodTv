@@ -31,7 +31,7 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
 		try {
 			await updateProduct(product._id, editedProduct);
 			onClose();
-		} catch (error) {
+		} catch {
 			console.log("error updating product");
 		}
 	};

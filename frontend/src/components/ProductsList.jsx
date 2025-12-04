@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Trash, Star, Package, Edit } from "lucide-react";
+import { Trash, Star, Edit } from "lucide-react";
 import { useProductStore } from "../stores/useProductStore";
 import { useState } from "react";
 import EditProductModal from "./EditProductModal";
@@ -215,6 +215,7 @@ const ProductsList = () => {
         product={editingProduct}
       />
     </motion.div>
+    </>
   );
 };
 
