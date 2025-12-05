@@ -78,7 +78,7 @@ const ProductCard = ({ product }) => {
 							)}
 						</div>
 						
-						<div className='flex gap-2'>
+						<div className='flex sm:flex-row flex-col gap-2'>
 							<button
 								className={`flex-1 px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-2 ${
 									isOutOfStock
@@ -89,7 +89,7 @@ const ProductCard = ({ product }) => {
 								disabled={isOutOfStock}
 							>
 								{!isOutOfStock && <ShoppingCart size={14} />}
-								{isOutOfStock ? 'OUT OF STOCK' : 'Add'}
+								{isOutOfStock ? 'OUT OF STOCK' : 'Add to Cart'}
 							</button>
 							
 							<button
