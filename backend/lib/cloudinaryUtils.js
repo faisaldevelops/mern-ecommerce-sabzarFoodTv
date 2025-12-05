@@ -6,7 +6,14 @@
  * @returns {string|null} - The full public_id including folder, or null if extraction fails
  */
 export const extractCloudinaryPublicId = (cloudinaryUrl, folder = 'products') => {
-	if (!cloudinaryUrl || !cloudinaryUrl.includes('cloudinary.com')) {
+	// Validate that this is a proper Cloudinary URL (must start with res.cloudinary.com)
+	if (!cloudinaryUrl || typeof cloudinaryUrl !== 'string') {
+		return null;
+	}
+
+	// Only process URLs from res.cloudinary.com to avoid security issues
+	const cloudinaryPattern = /^https?:\/\/res\.cloudinary\.com\//;
+	if (!cloudinaryPattern.test(cloudinaryUrl)) {
 		return null;
 	}
 
