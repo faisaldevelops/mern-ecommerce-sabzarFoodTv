@@ -1,4 +1,4 @@
-import { Home, ShoppingCart, Package, LogOut, LogIn, UserPlus, LayoutDashboard } from "lucide-react";
+import { Home, ShoppingCart, User, LogOut, LogIn, UserPlus, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUserStore } from "../stores/useUserStore";
 import { useCartStore } from "../stores/useCartStore";
@@ -31,7 +31,7 @@ const Navbar = () => {
 								className='flex items-center gap-2 px-3 py-2 text-stone-700 hover:bg-stone-100 rounded-md transition-colors'
 								title="My Orders"
 							>
-								<Package size={20} />
+								<User size={20} />
 								<span className='text-sm font-medium hidden sm:inline'>Orders</span>
 							</Link>
 						)}

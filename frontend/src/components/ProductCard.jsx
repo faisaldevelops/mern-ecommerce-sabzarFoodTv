@@ -28,7 +28,7 @@ const ProductCard = ({ product }) => {
 
 	return (
 		<>
-			<div className='group relative flex w-full flex-col overflow-hidden border-r border-b sm:border border-stone-200 sm:rounded-lg bg-white hover:shadow-lg transition-all duration-300'>
+			<div className='group relative flex w-full flex-col overflow-hidden border-r border-b sm:border border-gray-900 sm:rounded-lg bg-white hover:shadow-lg transition-all duration-300'>
 				{/* Image Container */}
 				<div className='relative flex h-64 overflow-hidden bg-stone-100 sm:rounded-t-lg'>
 					<img 
