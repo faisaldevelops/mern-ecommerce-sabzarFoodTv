@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Trash, Edit } from "lucide-react";
 import { useProductStore } from "../stores/useProductStore";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 const ProductsList = () => {
   const { deleteProduct, products, updateProduct } = useProductStore();
@@ -38,11 +39,24 @@ const ProductsList = () => {
 
   const handleEditSave = async () => {
     if (editingProduct) {
+      const price = parseFloat(editForm.price);
+      const stockQuantity = parseInt(editForm.stockQuantity, 10);
+      
+      // Validate numeric values
+      if (isNaN(price) || price < 0) {
+        toast.error('Please enter a valid price');
+        return;
+      }
+      if (isNaN(stockQuantity) || stockQuantity < 0) {
+        toast.error('Please enter a valid stock quantity');
+        return;
+      }
+      
       const updatedData = {
         name: editForm.name,
         description: editForm.description,
-        price: parseFloat(editForm.price),
-        stockQuantity: parseInt(editForm.stockQuantity, 10),
+        price,
+        stockQuantity,
         image: editForm.image,
       };
       await updateProduct(editingProduct, updatedData);
@@ -63,7 +77,7 @@ const ProductsList = () => {
       // Validate file type
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
       if (!validTypes.includes(file.type)) {
-        alert('Please select a valid image file (JPEG, PNG, WebP, or GIF)');
+        toast.error('Please select a valid image file (JPEG, PNG, WebP, or GIF)');
         e.target.value = '';
         return;
       }
@@ -71,7 +85,7 @@ const ProductsList = () => {
       // Validate file size (max 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB in bytes
       if (file.size > maxSize) {
-        alert('Image size must be less than 5MB');
+        toast.error('Image size must be less than 5MB');
         e.target.value = '';
         return;
       }
