@@ -85,14 +85,6 @@ const Navbar = () => {
 									<LogIn size={20} />
 									<span className='text-sm font-medium'>Login</span>
 								</Link>
-								<Link
-									to={"/signup"}
-									className='flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-md transition-colors'
-									title="Sign Up"
-								>
-									<UserPlus size={20} />
-									<span className='text-sm font-medium'>Sign Up</span>
-								</Link>
 							</>
 						)}
 					</nav>
