@@ -232,22 +232,22 @@ const OrderSummary = () => {
 
 			<div className='space-y-4'>
 				{/* Item Breakdown */}
-				<div className='space-y-3'>
+				<div className='space-y-2'>
 					<p className='text-sm font-semibold text-gray-300'>Items in your order:</p>
 					{cart.map((item) => (
-						<div key={item._id} className='flex items-center justify-between gap-4 pb-3 border-b border-gray-700'>
-							<div className='flex items-center gap-3 flex-1'>
+						<div key={item._id} className='flex items-center justify-between gap-3 pb-2 border-b border-gray-700'>
+							<div className='flex items-center gap-2 flex-1'>
 								<img 
 									src={item.image} 
 									alt={item.name}
-									className='w-12 h-12 rounded object-cover'
+									className='w-10 h-10 rounded object-cover flex-shrink-0'
 								/>
 								<div className='flex-1 min-w-0'>
-									<p className='text-sm text-gray-300 truncate'>{item.name}</p>
+									<p className='text-xs text-gray-300 truncate'>{item.name}</p>
 									<p className='text-xs text-gray-400'>Qty: {item.quantity}</p>
 								</div>
 							</div>
-							<p className='text-sm font-medium text-white'>₹{(item.price * item.quantity).toFixed(2)}</p>
+							<p className='text-sm font-medium text-white flex-shrink-0'>₹{(item.price * item.quantity).toFixed(2)}</p>
 						</div>
 					))}
 				</div>

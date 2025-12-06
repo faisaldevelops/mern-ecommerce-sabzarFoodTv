@@ -253,21 +253,21 @@ const OrderSummaryPage = () => {
 
 							<div className='space-y-4'>
 								{/* Item Breakdown */}
-								<div className='space-y-3'>
+								<div className='space-y-2'>
 									<p className='text-sm font-semibold text-gray-300'>Item Details:</p>
-									<div className='flex items-center justify-between gap-4 pb-3 border-b border-gray-700'>
-										<div className='flex items-center gap-3 flex-1'>
+									<div className='flex items-center justify-between gap-3 pb-2 border-b border-gray-700'>
+										<div className='flex items-center gap-2 flex-1'>
 											<img 
 												src={orderData.product.image} 
 												alt={orderData.product.name}
-												className='w-12 h-12 rounded object-cover'
+												className='w-10 h-10 rounded object-cover flex-shrink-0'
 											/>
 											<div className='flex-1 min-w-0'>
-												<p className='text-sm text-gray-300 truncate'>{orderData.product.name}</p>
+												<p className='text-xs text-gray-300 truncate'>{orderData.product.name}</p>
 												<p className='text-xs text-gray-400'>Qty: {orderData.quantity}</p>
 											</div>
 										</div>
-										<p className='text-sm font-medium text-white'>₹{totalPrice}</p>
+										<p className='text-sm font-medium text-white flex-shrink-0'>₹{totalPrice}</p>
 									</div>
 								</div>
 
