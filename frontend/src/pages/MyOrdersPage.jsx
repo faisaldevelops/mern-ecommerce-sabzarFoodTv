@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Package, Truck, CheckCircle, XCircle, Clock, MapPin, Calendar } from "lucide-react";
+import { Package, Truck, CheckCircle, XCircle, Clock, MapPin, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import axios from "../lib/axios";
 import toast from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -49,38 +49,92 @@ const MyOrdersPage = () => {
 	};
 
 	const TrackingTimeline = ({ history }) => {
+		const [isExpanded, setIsExpanded] = useState(false);
+		
 		if (!history || history.length === 0) return null;
+
+		// Get the most recent status (last item in array)
+		const currentStatus = history[history.length - 1];
+		const config = getStatusConfig(currentStatus.status);
+		const Icon = config.icon;
 
 		return (
 			<div className="mt-4 space-y-3">
-				<h4 className="text-sm font-semibold text-gray-300">Tracking History</h4>
-				<div className="relative border-l-2 border-gray-700 pl-4 space-y-4">
-					{history.map((item, index) => {
-						const config = getStatusConfig(item.status);
-						const Icon = config.icon;
-						
-						return (
-							<div key={index} className="relative">
-								<div className={`absolute -left-[1.35rem] w-6 h-6 rounded-full ${config.color} flex items-center justify-center`}>
-									<Icon className="w-3 h-3 text-white" />
-								</div>
-								<div className="text-xs text-gray-400">
-									{new Date(item.timestamp).toLocaleString(undefined, {
-										dateStyle: "medium",
-										timeStyle: "short",
-									})}
-								</div>
-								<div className={`text-sm font-medium ${config.textColor}`}>
-									{config.text}
-								</div>
-								{item.note && (
-									<div className="text-xs text-gray-500 mt-1">
-										{item.note}
-									</div>
-								)}
+				<div className="flex items-center justify-between">
+					<h4 className="text-sm font-semibold text-gray-300">Tracking History</h4>
+					{history.length > 1 && (
+						<button
+							onClick={() => setIsExpanded(!isExpanded)}
+							className="flex items-center gap-1 text-xs text-gray-400 hover:text-emerald-400 transition-colors"
+						>
+							{isExpanded ? (
+								<>
+									<span>Hide History</span>
+									<ChevronUp className="w-4 h-4" />
+								</>
+							) : (
+								<>
+									<span>Show Full History</span>
+									<ChevronDown className="w-4 h-4" />
+								</>
+							)}
+						</button>
+					)}
+				</div>
+
+				{/* Current Status - Always Visible */}
+				<div className="relative border-l-2 border-gray-700 pl-6">
+					<div className="relative pb-4">
+						<div className={`absolute -left-[1.75rem] w-6 h-6 rounded-full ${config.color} flex items-center justify-center`}>
+							<Icon className="w-3 h-3 text-white" />
+						</div>
+						<div className="text-xs text-gray-400">
+							{new Date(currentStatus.timestamp).toLocaleString(undefined, {
+								dateStyle: "medium",
+								timeStyle: "short",
+							})}
+						</div>
+						<div className={`text-sm font-medium ${config.textColor}`}>
+							{config.text}
+						</div>
+						{currentStatus.note && (
+							<div className="text-xs text-gray-500 mt-1">
+								{currentStatus.note}
 							</div>
-						);
-					})}
+						)}
+					</div>
+
+					{/* Previous History - Collapsible */}
+					{isExpanded && history.length > 1 && (
+						<div className="space-y-4">
+							{history.slice(0, -1).reverse().map((item, index) => {
+								const itemConfig = getStatusConfig(item.status);
+								const ItemIcon = itemConfig.icon;
+								
+								return (
+									<div key={index} className="relative pb-4">
+										<div className={`absolute -left-[1.75rem] w-6 h-6 rounded-full ${itemConfig.color} flex items-center justify-center`}>
+											<ItemIcon className="w-3 h-3 text-white" />
+										</div>
+										<div className="text-xs text-gray-400">
+											{new Date(item.timestamp).toLocaleString(undefined, {
+												dateStyle: "medium",
+												timeStyle: "short",
+											})}
+										</div>
+										<div className={`text-sm font-medium ${itemConfig.textColor}`}>
+											{itemConfig.text}
+										</div>
+										{item.note && (
+											<div className="text-xs text-gray-500 mt-1">
+												{item.note}
+											</div>
+										)}
+									</div>
+								);
+							})}
+						</div>
+					)}
 				</div>
 			</div>
 		);
@@ -92,7 +146,7 @@ const MyOrdersPage = () => {
 
 	if (orders.length === 0) {
 		return (
-			<div className="min-h-screen flex items-center justify-center">
+			<div className="min-h-screen bg-stone-900 flex items-center justify-center">
 				<div className="text-center">
 					<Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
 					<h2 className="text-2xl font-semibold text-gray-300 mb-2">No Orders Yet</h2>
@@ -103,7 +157,7 @@ const MyOrdersPage = () => {
 	}
 
 	return (
-		<div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+		<div className="min-h-screen bg-stone-900 py-8 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-5xl mx-auto">
 				<motion.div
 					initial={{ opacity: 0, y: -20 }}
@@ -145,7 +199,7 @@ const MyOrdersPage = () => {
 									<div className="text-right">
 										<div className="text-sm text-gray-400 mb-1">Total Amount</div>
 										<div className="text-2xl font-bold text-emerald-400">
-											${order.totalAmount.toFixed(2)}
+											₹{order.totalAmount.toFixed(2)}
 										</div>
 									</div>
 								</div>

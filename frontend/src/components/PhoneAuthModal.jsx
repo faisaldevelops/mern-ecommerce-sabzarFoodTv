@@ -31,10 +31,10 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
       toast.success(response.data.message);
       
       // In development, show OTP in console
-      if (response.data.otp) {
-        console.log("OTP:", response.data.otp);
-        toast.success(`Dev Mode - OTP: ${response.data.otp}`, { duration: 10000 });
-      }
+      // if (response.data.otp) {
+      //   console.log("OTP:", response.data.otp);
+      //   toast.success(`Dev Mode - OTP: ${response.data.otp}`, { duration: 10000 });
+      // }
       
       setStep("otp");
     } catch (error) {

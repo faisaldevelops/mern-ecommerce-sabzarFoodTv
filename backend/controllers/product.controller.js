@@ -1,6 +1,7 @@
 import { redis } from "../lib/redis.js";
 import cloudinary from "../lib/cloudinary.js";
 import Product from "../models/product.model.js";
+import { extractCloudinaryPublicId } from "../lib/cloudinaryUtils.js";
 
 export const getAllProducts = async (req, res) => {
 	try {
@@ -12,36 +13,9 @@ export const getAllProducts = async (req, res) => {
 	}
 };
 
-export const getFeaturedProducts = async (req, res) => {
-	try {
-		let featuredProducts = await redis.get("featured_products");
-		if (featuredProducts) {
-			return res.json(JSON.parse(featuredProducts));
-		}
-
-		// if not in redis, fetch from mongodb
-		// .lean() is gonna return a plain javascript object instead of a mongodb document
-		// which is good for performance
-		featuredProducts = await Product.find({ isFeatured: true }).lean();
-
-		if (!featuredProducts) {
-			return res.status(404).json({ message: "No featured products found" });
-		}
-
-		// store in redis for future quick access
-
-		await redis.set("featured_products", JSON.stringify(featuredProducts));
-
-		res.json(featuredProducts);
-	} catch (error) {
-		console.log("Error in getFeaturedProducts controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
-	}
-};
-
 export const createProduct = async (req, res) => {
 	try {
-		const { name, description, price, image, category, stockQuantity } = req.body;
+		const { name, description, price, image, stockQuantity } = req.body;
 
 		let cloudinaryResponse = null;
 
@@ -54,7 +28,6 @@ export const createProduct = async (req, res) => {
 			description,
 			price,
 			image: cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
-			category,
 			stockQuantity: stockQuantity || 0,
 		});
 
@@ -74,12 +47,14 @@ export const deleteProduct = async (req, res) => {
 		}
 
 		if (product.image) {
-			const publicId = product.image.split("/").pop().split(".")[0];
-			try {
-				await cloudinary.uploader.destroy(`products/${publicId}`);
-				console.log("deleted image from cloduinary");
-			} catch (error) {
-				console.log("error deleting image from cloduinary", error);
+			const publicId = extractCloudinaryPublicId(product.image);
+			if (publicId) {
+				try {
+					await cloudinary.uploader.destroy(publicId);
+					console.log("deleted image from cloudinary");
+				} catch (error) {
+					console.log("error deleting image from cloudinary", error);
+				}
 			}
 		}
 
@@ -118,34 +93,6 @@ export const getRecommendedProducts = async (req, res) => {
 	}
 };
 
-export const getProductsByCategory = async (req, res) => {
-	const { category } = req.params;
-	try {
-		const products = await Product.find({ category });
-		res.json({ products });
-	} catch (error) {
-		console.log("Error in getProductsByCategory controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
-	}
-};
-
-export const toggleFeaturedProduct = async (req, res) => {
-	try {
-		const product = await Product.findById(req.params.id);
-		if (product) {
-			product.isFeatured = !product.isFeatured;
-			const updatedProduct = await product.save();
-			await updateFeaturedProductsCache();
-			res.json(updatedProduct);
-		} else {
-			res.status(404).json({ message: "Product not found" });
-		}
-	} catch (error) {
-		console.log("Error in toggleFeaturedProduct controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
-	}
-};
-
 export const updateProductStock = async (req, res) => {
 	try {
 		const { stockQuantity } = req.body;
@@ -167,13 +114,47 @@ export const updateProductStock = async (req, res) => {
 	}
 };
 
-async function updateFeaturedProductsCache() {
+export const updateProduct = async (req, res) => {
 	try {
-		// The lean() method  is used to return plain JavaScript objects instead of full Mongoose documents. This can significantly improve performance
+		const { name, description, price, image, stockQuantity } = req.body;
+		const product = await Product.findById(req.params.id);
+		
+		if (!product) {
+			return res.status(404).json({ message: "Product not found" });
+		}
 
-		const featuredProducts = await Product.find({ isFeatured: true }).lean();
-		await redis.set("featured_products", JSON.stringify(featuredProducts));
+		// If there's a new image, upload it to Cloudinary
+		let cloudinaryResponse = null;
+		// Check if image is base64 (new upload) by checking if it starts with data:image
+		const isNewImage = image && image.startsWith('data:image');
+		
+		if (isNewImage) {
+			// Delete old image from Cloudinary if it exists
+			if (product.image) {
+				const publicId = extractCloudinaryPublicId(product.image);
+				if (publicId) {
+					try {
+						await cloudinary.uploader.destroy(publicId);
+					} catch (error) {
+						console.log("error deleting old image from cloudinary", error);
+						// Continue with upload even if delete fails
+					}
+				}
+			}
+			cloudinaryResponse = await cloudinary.uploader.upload(image, { folder: "products" });
+		}
+
+		// Update product fields
+		if (name !== undefined) product.name = name;
+		if (description !== undefined) product.description = description;
+		if (price !== undefined) product.price = price;
+		if (stockQuantity !== undefined) product.stockQuantity = stockQuantity;
+		if (cloudinaryResponse?.secure_url) product.image = cloudinaryResponse.secure_url;
+
+		const updatedProduct = await product.save();
+		res.json(updatedProduct);
 	} catch (error) {
-		console.log("error in update cache function");
+		console.log("Error in updateProduct controller", error.message);
+		res.status(500).json({ message: "Server error", error: error.message });
 	}
-}
+};

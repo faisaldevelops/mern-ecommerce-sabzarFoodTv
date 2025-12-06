@@ -28,9 +28,9 @@ const ProductCard = ({ product }) => {
 
 	return (
 		<>
-			<div className='group relative flex w-full flex-col overflow-hidden rounded-lg border border-stone-200 bg-white hover:shadow-lg transition-all duration-300'>
+			<div className='group relative flex w-full flex-col overflow-hidden border-r border-b sm:border border-gray-900 sm:rounded-lg bg-white hover:shadow-lg transition-all duration-300'>
 				{/* Image Container */}
-				<div className='relative flex h-64 overflow-hidden bg-stone-100 rounded-t-lg'>
+				<div className='relative flex h-64 overflow-hidden bg-stone-100 sm:rounded-t-lg'>
 					<img 
 						className='object-cover w-full transition-transform duration-500 group-hover:scale-105' 
 						src={product.image} 
@@ -69,7 +69,7 @@ const ProductCard = ({ product }) => {
 					<div className='mt-auto pt-3'>
 						<div className='flex items-baseline justify-between mb-3'>
 							<span className='text-xl font-bold text-stone-900'>
-								${product.price}
+								₹{product.price}
 							</span>
 							{!isOutOfStock && (
 								<span className='text-xs text-stone-500'>
@@ -78,7 +78,7 @@ const ProductCard = ({ product }) => {
 							)}
 						</div>
 						
-						<div className='flex gap-2'>
+						<div className='flex sm:flex-row flex-col gap-2'>
 							<button
 								className={`flex-1 px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-2 ${
 									isOutOfStock
@@ -89,7 +89,7 @@ const ProductCard = ({ product }) => {
 								disabled={isOutOfStock}
 							>
 								{!isOutOfStock && <ShoppingCart size={14} />}
-								{isOutOfStock ? 'OUT OF STOCK' : 'Add'}
+								{isOutOfStock ? 'OUT OF STOCK' : 'Add to Cart'}
 							</button>
 							
 							<button

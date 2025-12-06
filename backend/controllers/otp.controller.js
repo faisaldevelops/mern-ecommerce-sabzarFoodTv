@@ -85,7 +85,7 @@ export const sendOTP = async (req, res) => {
       message: "OTP sent successfully",
       userExists: !!userExists,
       // In development, return OTP for testing (remove in production)
-      ...(process.env.NODE_ENV === "development" && { otp }),
+      // ...(process.env.NODE_ENV === "development" && { otp }),
     });
   } catch (error) {
     console.error("Error sending OTP:", error);

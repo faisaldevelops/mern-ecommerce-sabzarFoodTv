@@ -2,15 +2,14 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Upload, Loader } from "lucide-react";
 import { useProductStore } from "../stores/useProductStore";
-
-const categories = ["jeans", "t-shirts", "shoes", "glasses", "jackets", "suits", "bags"];
+import toast from "react-hot-toast";
+import { validateImageFile, readFileAsBase64 } from "../lib/imageValidation";
 
 const CreateProductForm = () => {
 	const [newProduct, setNewProduct] = useState({
 		name: "",
 		description: "",
 		price: "",
-		category: "",
 		image: "",
 		stockQuantity: "",
 	});
@@ -21,22 +20,24 @@ const CreateProductForm = () => {
 		e.preventDefault();
 		try {
 			await createProduct(newProduct);
-			setNewProduct({ name: "", description: "", price: "", category: "", image: "", stockQuantity: "" });
+			setNewProduct({ name: "", description: "", price: "", image: "", stockQuantity: "" });
 		} catch {
 			console.log("error creating a product");
 		}
 	};
 
-	const handleImageChange = (e) => {
+	const handleImageChange = async (e) => {
 		const file = e.target.files[0];
-		if (file) {
-			const reader = new FileReader();
-
-			reader.onloadend = () => {
-				setNewProduct({ ...newProduct, image: reader.result });
-			};
-
-			reader.readAsDataURL(file); // base64
+		const validatedFile = validateImageFile(file, e.target);
+		
+		if (validatedFile) {
+			try {
+				const base64 = await readFileAsBase64(validatedFile);
+				setNewProduct({ ...newProduct, image: base64 });
+			} catch (error) {
+				toast.error('Failed to read image file');
+				e.target.value = '';
+			}
 		}
 	};
 
@@ -119,29 +120,6 @@ const CreateProductForm = () => {
 						 focus:border-emerald-500'
 						required
 					/>
-				</div>
-
-				<div>
-					<label htmlFor='category' className='block text-sm font-medium text-gray-300'>
-						Category
-					</label>
-					<select
-						id='category'
-						name='category'
-						value={newProduct.category}
-						onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-						className='mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md
-						 shadow-sm py-2 px-3 text-white focus:outline-none 
-						 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500'
-						required
-					>
-						<option value=''>Select a category</option>
-						{categories.map((category) => (
-							<option key={category} value={category}>
-								{category}
-							</option>
-						))}
-					</select>
 				</div>
 
 				<div className='mt-1 flex items-center'>
