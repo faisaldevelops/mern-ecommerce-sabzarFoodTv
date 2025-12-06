@@ -29,7 +29,7 @@ const OrderSummaryPage = () => {
 				setOrderData(parsed);
 			} catch (error) {
 				console.error("Failed to parse pending order:", error);
-				toast.error("Invalid order data");
+				toast.error("Unable to load your order. Please try placing your order again.");
 				navigate("/");
 			}
 		} else {

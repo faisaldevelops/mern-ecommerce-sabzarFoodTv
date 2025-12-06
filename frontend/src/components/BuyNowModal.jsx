@@ -29,8 +29,8 @@ const BuyNowModal = ({ isOpen, onClose, product }) => {
   const handleProceed = () => {
     // Store pending order data
     const orderData = {
-      product: product,
-      quantity: quantity,
+      product,
+      quantity,
     };
     localStorage.setItem("pendingBuyNowOrder", JSON.stringify(orderData));
 
