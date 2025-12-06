@@ -24,7 +24,8 @@ const OrderSummary = () => {
 
 	const savings = subtotal - total;
 	const formattedSubtotal = subtotal.toFixed(2);
-	const formattedTotal = total.toFixed(2);
+	const extraCharges = 20; // Extra charges in rupees
+	const formattedTotal = (total + extraCharges).toFixed(2);
 	const formattedSavings = savings.toFixed(2);
 
 	// Handle place order button click
@@ -229,6 +230,27 @@ const OrderSummary = () => {
 			)}
 
 			<div className='space-y-4'>
+				{/* Item Breakdown */}
+				<div className='space-y-3'>
+					<p className='text-sm font-semibold text-gray-300'>Items in your order:</p>
+					{cart.map((item) => (
+						<div key={item._id} className='flex items-center justify-between gap-4 pb-3 border-b border-gray-700'>
+							<div className='flex items-center gap-3 flex-1'>
+								<img 
+									src={item.image} 
+									alt={item.name}
+									className='w-12 h-12 rounded object-cover'
+								/>
+								<div className='flex-1 min-w-0'>
+									<p className='text-sm text-gray-300 truncate'>{item.name}</p>
+									<p className='text-xs text-gray-400'>Qty: {item.quantity}</p>
+								</div>
+							</div>
+							<p className='text-sm font-medium text-white'>₹{(item.price * item.quantity).toFixed(2)}</p>
+						</div>
+					))}
+				</div>
+
 				<div className='space-y-2'>
 					<dl className='flex items-center justify-between gap-4'>
 						<dt className='text-base font-normal text-gray-300'>Original price</dt>
@@ -241,6 +263,10 @@ const OrderSummary = () => {
 							<dd className='text-base font-medium text-emerald-400'>-₹{formattedSavings}</dd>
 						</dl>
 					)}
+					<dl className='flex items-center justify-between gap-4'>
+						<dt className='text-base font-normal text-gray-300'>Extra Charges</dt>
+						<dd className='text-base font-medium text-white'>₹{extraCharges.toFixed(2)}</dd>
+					</dl>
 					<dl className='flex items-center justify-between gap-4 border-t border-gray-600 pt-2'>
 						<dt className='text-base font-bold text-white'>Total</dt>
 						<dd className='text-base font-bold text-emerald-400'>₹{formattedTotal}</dd>
