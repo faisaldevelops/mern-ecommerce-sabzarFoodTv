@@ -12,9 +12,14 @@ const Navbar = () => {
 		<header className='fixed top-0 left-0 w-full bg-stone-50 border-b border-stone-200 z-40 shadow-sm'>
 			<div className='container mx-auto px-4 py-3'>
 				<div className='flex justify-between items-center'>
-					<Link to='/' className='text-2xl font-bold tracking-tight text-stone-900'>
-						Sabzar Foods
+					<Link
+						to="/"
+						className="flex flex-col leading-tight font-serif font-bold text-stone-900 tracking-tight"
+					>
+						<span className="text-3xl">Sabzar</span>
+						<span className="text-xl -mt-1">Foods</span>
 					</Link>
+
 
 					<nav className='flex items-center gap-2'>
 						<Link
