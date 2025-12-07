@@ -10,10 +10,16 @@ const otpStore = new Map();
 // Structure: { phoneNumber: { count: number, resetAt: timestamp, lastSentAt: timestamp } }
 const throttleStore = new Map();
 
+// In-memory storage for failed OTP attempts
+// Structure: { phoneNumber: { attempts: number, freezeUntil: timestamp } }
+const failedAttemptsStore = new Map();
+
 // Throttling configuration
 const RESEND_COOLDOWN_SECONDS = 60; // Minimum time between resends
 const MAX_RESENDS_PER_WINDOW = 3; // Maximum resends allowed in the time window
 const THROTTLE_WINDOW_MINUTES = 15; // Time window for tracking resends
+const MAX_FAILED_ATTEMPTS = 3; // Maximum failed OTP attempts
+const FREEZE_DURATION_MINUTES = 15; // Freeze duration after max failed attempts
 
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -92,6 +98,61 @@ const updateThrottle = (phoneNumber) => {
   }
 };
 
+// Check if phone number is frozen due to failed attempts
+const checkFailedAttempts = (phoneNumber) => {
+  const now = Date.now();
+  const attemptData = failedAttemptsStore.get(phoneNumber);
+
+  if (!attemptData) {
+    return { allowed: true };
+  }
+
+  // Check if freeze period has expired
+  if (attemptData.freezeUntil && now < attemptData.freezeUntil) {
+    const remainingMinutes = Math.ceil((attemptData.freezeUntil - now) / 60000);
+    return {
+      allowed: false,
+      reason: "frozen",
+      remainingMinutes,
+      message: `Too many failed attempts. Please try again in ${remainingMinutes} minute(s)`,
+    };
+  }
+
+  // Freeze period expired, reset attempts
+  if (attemptData.freezeUntil && now >= attemptData.freezeUntil) {
+    failedAttemptsStore.delete(phoneNumber);
+    return { allowed: true };
+  }
+
+  return { allowed: true };
+};
+
+// Record a failed OTP attempt
+const recordFailedAttempt = (phoneNumber) => {
+  const now = Date.now();
+  const attemptData = failedAttemptsStore.get(phoneNumber);
+
+  if (!attemptData) {
+    failedAttemptsStore.set(phoneNumber, {
+      attempts: 1,
+      freezeUntil: null,
+    });
+  } else {
+    attemptData.attempts += 1;
+    
+    if (attemptData.attempts >= MAX_FAILED_ATTEMPTS) {
+      attemptData.freezeUntil = now + FREEZE_DURATION_MINUTES * 60 * 1000;
+    }
+    
+    failedAttemptsStore.set(phoneNumber, attemptData);
+  }
+};
+
+// Clear failed attempts on successful verification
+const clearFailedAttempts = (phoneNumber) => {
+  failedAttemptsStore.delete(phoneNumber);
+};
+
 // Send OTP via Twilio or log to console
 const sendOTPMessage = async (phoneNumber, otp) => {
   if (twilioClient && twilioPhoneNumber) {
@@ -128,6 +189,16 @@ export const sendOTP = async (req, res) => {
     const phoneRegex = /^\d{10}$/;
     if (!phoneRegex.test(phoneNumber)) {
       return res.status(400).json({ message: "Invalid phone number format. Must be 10 digits." });
+    }
+
+    // Check if phone number is frozen due to failed attempts
+    const failedCheck = checkFailedAttempts(phoneNumber);
+    if (!failedCheck.allowed) {
+      return res.status(429).json({
+        message: failedCheck.message,
+        reason: failedCheck.reason,
+        remainingMinutes: failedCheck.remainingMinutes,
+      });
     }
 
     // Check throttling
@@ -193,6 +264,16 @@ export const verifyOTP = async (req, res) => {
       return res.status(400).json({ message: "Phone number and OTP are required" });
     }
 
+    // Check if phone number is frozen due to failed attempts
+    const failedCheck = checkFailedAttempts(phoneNumber);
+    if (!failedCheck.allowed) {
+      return res.status(429).json({
+        message: failedCheck.message,
+        reason: failedCheck.reason,
+        remainingMinutes: failedCheck.remainingMinutes,
+      });
+    }
+
     // Check if OTP exists
     const storedData = otpStore.get(phoneNumber);
     if (!storedData) {
@@ -207,12 +288,28 @@ export const verifyOTP = async (req, res) => {
 
     // Verify OTP
     if (storedData.otp !== otp) {
-      return res.status(400).json({ message: "Invalid OTP" });
+      recordFailedAttempt(phoneNumber);
+      const attemptData = failedAttemptsStore.get(phoneNumber);
+      const remainingAttempts = MAX_FAILED_ATTEMPTS - attemptData.attempts;
+      
+      if (remainingAttempts <= 0) {
+        return res.status(429).json({ 
+          message: `Too many failed attempts. Your number is frozen for ${FREEZE_DURATION_MINUTES} minutes.`,
+          reason: "frozen",
+          remainingMinutes: FREEZE_DURATION_MINUTES,
+        });
+      }
+      
+      return res.status(400).json({ 
+        message: "Invalid OTP",
+        remainingAttempts,
+      });
     }
 
-    // OTP verified - delete it and clear throttle data
+    // OTP verified - delete it and clear throttle data and failed attempts
     otpStore.delete(phoneNumber);
     throttleStore.delete(phoneNumber);
+    clearFailedAttempts(phoneNumber);
 
     // Check if user exists
     let user = await User.findOne({ phoneNumber });
