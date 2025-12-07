@@ -13,6 +13,10 @@ const BuyNowModal = ({ isOpen, onClose, product }) => {
   const navigate = useNavigate();
 
   const handleIncrement = () => {
+    if (quantity >= 5) {
+      toast.error("Maximum quantity of 5 per item allowed");
+      return;
+    }
     if (quantity < product.stockQuantity) {
       setQuantity(quantity + 1);
     } else {

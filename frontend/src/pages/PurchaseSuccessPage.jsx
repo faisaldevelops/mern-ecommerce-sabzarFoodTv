@@ -109,13 +109,14 @@ const PurchaseSuccessPage = () => {
 					</div>
 
 					<div className='space-y-4'>
-						<button
+						<Link
+							to={"/my-orders"}
 							className='w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4
              rounded-lg transition duration-300 flex items-center justify-center'
 						>
 							<HandHeart className='mr-2' size={18} />
-							Thanks for trusting us!
-						</button>
+							Thanks for trusting us! View Orders
+						</Link>
 						<Link
 							to={"/"}
 							className='w-full bg-gray-700 hover:bg-gray-600 text-emerald-400 font-bold py-2 px-4 

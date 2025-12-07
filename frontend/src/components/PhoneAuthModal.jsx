@@ -38,7 +38,7 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
       // }
       
       setStep("otp");
-      setResendCooldown(30); // Start 30-second cooldown
+      setResendCooldown(60); // Start 60-second cooldown
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send OTP");
     } finally {
@@ -61,7 +61,7 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
         toast.success(`Dev Mode - OTP: ${response.data.otp}`, { duration: 10000 });
       }
       
-      setResendCooldown(30); // Reset 30-second cooldown
+      setResendCooldown(60); // Reset 60-second cooldown
     } catch (error) {
       const errorData = error.response?.data;
       if (errorData?.reason === "cooldown" && errorData?.waitTime) {

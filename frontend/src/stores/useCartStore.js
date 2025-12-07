@@ -77,6 +77,13 @@ export const useCartStore = create((set, get) => ({
 	
 	addToCart: async (product) => {
 		try {
+			// Check if item already exists and enforce max quantity of 5
+			const existingItem = get().cart.find((item) => item._id === product._id);
+			if (existingItem && existingItem.quantity >= 5) {
+				toast.error("Maximum quantity of 5 per item allowed");
+				return;
+			}
+			
 			// Try to add to server cart first
 			const response = await axios.post("/cart", { productId: product._id });
 			
@@ -87,7 +94,7 @@ export const useCartStore = create((set, get) => ({
 					const existingItem = prevState.cart.find((item) => item._id === product._id);
 					const newCart = existingItem
 						? prevState.cart.map((item) =>
-								item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+								item._id === product._id ? { ...item, quantity: Math.min(item.quantity + 1, 5) } : item
 						  )
 						: [...prevState.cart, { ...product, quantity: 1 }];
 					setLocalCart(newCart);
@@ -102,7 +109,7 @@ export const useCartStore = create((set, get) => ({
 					const existingItem = prevState.cart.find((item) => item._id === product._id);
 					const newCart = existingItem
 						? prevState.cart.map((item) =>
-								item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+								item._id === product._id ? { ...item, quantity: Math.min(item.quantity + 1, 5) } : item
 						  )
 						: [...prevState.cart, { ...product, quantity: 1 }];
 					return { cart: newCart };
@@ -132,6 +139,12 @@ export const useCartStore = create((set, get) => ({
 	updateQuantity: async (productId, quantity) => {
 		if (quantity === 0) {
 			get().removeFromCart(productId);
+			return;
+		}
+		
+		// Enforce max quantity of 5
+		if (quantity > 5) {
+			toast.error("Maximum quantity of 5 per item allowed");
 			return;
 		}
 

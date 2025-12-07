@@ -11,7 +11,7 @@ const otpStore = new Map();
 const throttleStore = new Map();
 
 // Throttling configuration
-const RESEND_COOLDOWN_SECONDS = 30; // Minimum time between resends
+const RESEND_COOLDOWN_SECONDS = 60; // Minimum time between resends
 const MAX_RESENDS_PER_WINDOW = 3; // Maximum resends allowed in the time window
 const THROTTLE_WINDOW_MINUTES = 15; // Time window for tracking resends
 
