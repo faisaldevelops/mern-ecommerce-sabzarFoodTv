@@ -83,119 +83,119 @@ const AddressModal = ({ isOpen, onClose, onSave, initial = null }) => {
         onClick={onClose}
       />
       <motion.div
-        className="relative z-10 w-full max-w-lg rounded-lg border border-gray-700 bg-gray-800 p-6 shadow-sm"
+        className="relative z-10 w-full max-w-lg rounded-lg border border-stone-200 bg-white p-6 shadow-xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
       >
         <div className="mb-4 flex items-start justify-between">
-          <h3 className="text-lg font-semibold text-emerald-400">Add Address</h3>
-          <button onClick={onClose} className="text-gray-300 hover:text-white">
+          <h3 className="text-lg font-semibold text-stone-900">Add Address</h3>
+          <button onClick={onClose} className="text-stone-600 hover:text-stone-900">
             <X size={18} />
           </button>
         </div>
 
         <div className="space-y-3">
           <div>
-            <label className="text-sm text-gray-300">Name</label>
+            <label className="text-sm text-stone-700">Name</label>
             <input
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-300"
+              className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
               placeholder="Full name"
             />
-            {errors.name && <p className="text-xs text-rose-400">{errors.name}</p>}
+            {errors.name && <p className="text-xs text-red-600">{errors.name}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm text-gray-300">Phone</label>
+              <label className="text-sm text-stone-700">Phone</label>
               <input
                 name="phoneNumber"
                 value={form.phoneNumber}
                 onChange={handleChange}
                 inputMode="numeric"
-                className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-300"
+                className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
                 placeholder="10 digits"
               />
-              {errors.phoneNumber && <p className="text-xs text-rose-400">{errors.phoneNumber}</p>}
+              {errors.phoneNumber && <p className="text-xs text-red-600">{errors.phoneNumber}</p>}
             </div>
             <div>
-              <label className="text-sm text-gray-300">Email (optional)</label>
+              <label className="text-sm text-stone-700">Email (optional)</label>
               <input
                 name="email"
                 type="email"
                 value={form.email}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-300"
+                className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
                 placeholder="Optional"
               />
-              {errors.email && <p className="text-xs text-rose-400">{errors.email}</p>}
+              {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
             </div>
           </div>
 
           <div>
-            <label className="text-sm text-gray-300">Pincode</label>
+            <label className="text-sm text-stone-700">Pincode</label>
             <input
               name="pincode"
               value={form.pincode}
               onChange={handleChange}
               inputMode="numeric"
-              className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-300"
+              className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
               placeholder="6 digits"
             />
-            {errors.pincode && <p className="text-xs text-rose-400">{errors.pincode}</p>}
+            {errors.pincode && <p className="text-xs text-red-600">{errors.pincode}</p>}
           </div>
 
           <div>
-            <label className="text-sm text-gray-300">House / Flat no.</label>
+            <label className="text-sm text-stone-700">House / Flat no.</label>
             <input
               name="houseNumber"
               value={form.houseNumber}
               onChange={handleChange}
-              className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-300"
+              className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-300">Street Address</label>
+            <label className="text-sm text-stone-700">Street Address</label>
             <input
               name="streetAddress"
               value={form.streetAddress}
               onChange={handleChange}
-              className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-300"
+              className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-300">Landmark (optional)</label>
+            <label className="text-sm text-stone-700">Landmark (optional)</label>
             <input
               name="landmark"
               value={form.landmark}
               onChange={handleChange}
-              className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-300"
+              className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm text-gray-300">City</label>
+              <label className="text-sm text-stone-700">City</label>
               <input
                 name="city"
                 value={form.city}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-300"
+                className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="text-sm text-gray-300">State</label>
+              <label className="text-sm text-stone-700">State</label>
               <select
                 name="state"
                 value={form.state}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-300"
+                className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
               >
                 <option value="">Select state</option>
                 {INDIAN_STATES.map((s) => (
@@ -208,7 +208,7 @@ const AddressModal = ({ isOpen, onClose, onSave, initial = null }) => {
           <div className="mt-4 flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:text-white"
+              className="rounded-lg border border-stone-300 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
             >
               Cancel
             </button>
@@ -216,7 +216,7 @@ const AddressModal = ({ isOpen, onClose, onSave, initial = null }) => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleSave}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700 focus:ring-4 focus:ring-emerald-300"
+              className="rounded-lg bg-stone-800 px-4 py-2 text-sm text-white hover:bg-stone-700 focus:ring-4 focus:ring-stone-300"
             >
               Save Address
             </motion.button>

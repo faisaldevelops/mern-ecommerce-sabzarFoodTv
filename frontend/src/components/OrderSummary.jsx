@@ -214,12 +214,12 @@ const OrderSummary = () => {
 
 	return (
 		<motion.div
-			className='space-y-4 rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-sm sm:p-6'
+			className='space-y-4 rounded-lg border border-stone-200 bg-white p-4 shadow-sm sm:p-6'
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.5 }}
 		>
-			<p className='text-xl font-semibold text-emerald-400'>Order summary</p>
+			<p className='text-xl font-semibold text-stone-900'>Order summary</p>
 
 			{/* Countdown Timer when hold is active */}
 			{holdInfo && (
@@ -233,9 +233,9 @@ const OrderSummary = () => {
 			<div className='space-y-4'>
 				{/* Item Breakdown */}
 				<div className='space-y-2'>
-					<p className='text-sm font-semibold text-gray-300'>Items in your order:</p>
+					<p className='text-sm font-semibold text-stone-700'>Items in your order:</p>
 					{cart.map((item) => (
-						<div key={item._id} className='flex items-center justify-between gap-3 pb-2 border-b border-gray-700'>
+						<div key={item._id} className='flex items-center justify-between gap-3 pb-2 border-b border-stone-200'>
 							<div className='flex items-center gap-2 flex-1'>
 								<img 
 									src={item.image} 
@@ -243,39 +243,39 @@ const OrderSummary = () => {
 									className='w-10 h-10 rounded object-cover flex-shrink-0'
 								/>
 								<div className='flex-1 min-w-0'>
-									<p className='text-xs text-gray-300 truncate'>{item.name}</p>
-									<p className='text-xs text-gray-400'>Qty: {item.quantity}</p>
+									<p className='text-xs text-stone-700 truncate'>{item.name}</p>
+									<p className='text-xs text-stone-500'>Qty: {item.quantity}</p>
 								</div>
 							</div>
-							<p className='text-sm font-medium text-white flex-shrink-0'>₹{(item.price * item.quantity).toFixed(2)}</p>
+							<p className='text-sm font-medium text-stone-900 flex-shrink-0'>₹{(item.price * item.quantity).toFixed(2)}</p>
 						</div>
 					))}
 				</div>
 
 				<div className='space-y-2'>
 					<dl className='flex items-center justify-between gap-4'>
-						<dt className='text-base font-normal text-gray-300'>Original price</dt>
-						<dd className='text-base font-medium text-white'>₹{formattedSubtotal}</dd>
+						<dt className='text-base font-normal text-stone-700'>Original price</dt>
+						<dd className='text-base font-medium text-stone-900'>₹{formattedSubtotal}</dd>
 					</dl>
 
 					{savings > 0 && (
 						<dl className='flex items-center justify-between gap-4'>
-							<dt className='text-base font-normal text-gray-300'>Savings</dt>
-							<dd className='text-base font-medium text-emerald-400'>-₹{formattedSavings}</dd>
+							<dt className='text-base font-normal text-stone-700'>Savings</dt>
+							<dd className='text-base font-medium text-stone-900'>-₹{formattedSavings}</dd>
 						</dl>
 					)}
 					<dl className='flex items-center justify-between gap-4'>
-						<dt className='text-base font-normal text-gray-300'>Extra Charges</dt>
-						<dd className='text-base font-medium text-white'>₹{extraCharges.toFixed(2)}</dd>
+						<dt className='text-base font-normal text-stone-700'>Extra Charges</dt>
+						<dd className='text-base font-medium text-stone-900'>₹{extraCharges.toFixed(2)}</dd>
 					</dl>
-					<dl className='flex items-center justify-between gap-4 border-t border-gray-600 pt-2'>
-						<dt className='text-base font-bold text-white'>Total</dt>
-						<dd className='text-base font-bold text-emerald-400'>₹{formattedTotal}</dd>
+					<dl className='flex items-center justify-between gap-4 border-t border-stone-300 pt-2'>
+						<dt className='text-base font-bold text-stone-900'>Total</dt>
+						<dd className='text-base font-bold text-stone-900'>₹{formattedTotal}</dd>
 					</dl>
 				</div>
 
 				<motion.button
-					className='flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed'
+					className='flex w-full items-center justify-center rounded-lg bg-stone-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-stone-700 focus:outline-none focus:ring-4 focus:ring-stone-300 disabled:opacity-50 disabled:cursor-not-allowed'
 					whileHover={{ scale: isProcessing ? 1 : 1.05 }}
 					whileTap={{ scale: isProcessing ? 1 : 0.95 }}
 					onClick={handlePlaceOrder}
@@ -285,10 +285,10 @@ const OrderSummary = () => {
 				</motion.button>
 
 				<div className='flex items-center justify-center gap-2'>
-					<span className='text-sm font-normal text-gray-400'>or</span>
+					<span className='text-sm font-normal text-stone-600'>or</span>
 					<Link
 						to='/'
-						className='inline-flex items-center gap-2 text-sm font-medium text-emerald-400 underline hover:text-emerald-300 hover:no-underline'
+						className='inline-flex items-center gap-2 text-sm font-medium text-stone-800 underline hover:text-stone-700 hover:no-underline'
 					>
 						Continue Shopping
 						<MoveRight size={16} />

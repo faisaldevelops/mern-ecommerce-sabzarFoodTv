@@ -13,21 +13,25 @@ const LoginPage = () => {
 	const [loading, setLoading] = useState(false);
 	const [resendCooldown, setResendCooldown] = useState(0);
 	const [resendLoading, setResendLoading] = useState(false);
+	const [phoneError, setPhoneError] = useState("");
+	const [otpError, setOtpError] = useState("");
+	const [otpSuccess, setOtpSuccess] = useState("");
 	const { checkAuth } = useUserStore();
 	const { syncGuestCart } = useCartStore();
 
 	const handleSendOTP = async (e) => {
 		e.preventDefault();
+		setPhoneError("");
 		
 		if (!/^\d{10}$/.test(phoneNumber)) {
-			toast.error("Please enter a valid 10-digit phone number");
+			setPhoneError("Please enter a valid 10-digit phone number");
 			return;
 		}
 
 		setLoading(true);
 		try {
 			const response = await axios.post("/otp/send", { phoneNumber, isSignup: false });
-			toast.success(response.data.message);
+			setOtpSuccess("OTP sent successfully");
 			
 			// In development, show OTP in toast
 			if (response.data.otp) {
@@ -35,9 +39,17 @@ const LoginPage = () => {
 			}
 			
 			setStep("otp");
-			setResendCooldown(30); // Start 30-second cooldown
+			setResendCooldown(60); // Start 60-second cooldown
+			
+			// Clear success message after 3 seconds
+			setTimeout(() => setOtpSuccess(""), 3000);
 		} catch (error) {
-			toast.error(error.response?.data?.message || "Failed to send OTP");
+			const errorData = error.response?.data;
+			if (errorData?.reason === "frozen") {
+				setPhoneError(errorData.message);
+			} else {
+				setPhoneError(errorData?.message || "Failed to send OTP");
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -49,24 +61,29 @@ const LoginPage = () => {
 		}
 
 		setResendLoading(true);
+		setOtpError("");
+		setOtpSuccess("");
 		try {
 			const response = await axios.post("/otp/resend", { phoneNumber });
-			toast.success(response.data.message);
+			setOtpSuccess("OTP resent successfully");
 			
 			// In development, show OTP in toast
 			if (response.data.otp) {
 				toast.success(`Dev Mode - OTP: ${response.data.otp}`, { duration: 10000 });
 			}
 			
-			setResendCooldown(30); // Reset 30-second cooldown
+			setResendCooldown(60); // Reset 60-second cooldown
+			
+			// Clear success message after 3 seconds
+			setTimeout(() => setOtpSuccess(""), 3000);
 		} catch (error) {
 			const errorData = error.response?.data;
 			if (errorData?.reason === "cooldown" && errorData?.waitTime) {
-				toast.error(`Please wait ${errorData.waitTime} seconds before resending`);
+				setOtpError(`Please wait ${errorData.waitTime} seconds before resending`);
 			} else if (errorData?.reason === "limit_reached" && errorData?.resetInMinutes) {
-				toast.error(`Too many attempts. Try again in ${errorData.resetInMinutes} minute(s)`);
+				setOtpError(`Too many attempts. Try again in ${errorData.resetInMinutes} minute(s)`);
 			} else {
-				toast.error(errorData?.message || "Failed to resend OTP");
+				setOtpError(errorData?.message || "Failed to resend OTP");
 			}
 		} finally {
 			setResendLoading(false);
@@ -85,9 +102,11 @@ const LoginPage = () => {
 
 	const handleVerifyOTP = async (e) => {
 		e.preventDefault();
+		setOtpError("");
+		setOtpSuccess("");
 		
 		if (!otp || otp.length !== 6) {
-			toast.error("Please enter the 6-digit OTP");
+			setOtpError("Please enter the 6-digit OTP");
 			return;
 		}
 
@@ -98,7 +117,7 @@ const LoginPage = () => {
 				otp,
 			});
 			
-			toast.success(response.data.message);
+			setOtpSuccess(response.data.message);
 			
 			// Refresh auth state
 			await checkAuth();
@@ -106,7 +125,14 @@ const LoginPage = () => {
 			// Sync guest cart to database after successful login
 			await syncGuestCart();
 		} catch (error) {
-			toast.error(error.response?.data?.message || "Failed to verify OTP");
+			const errorData = error.response?.data;
+			if (errorData?.reason === "frozen") {
+				setOtpError(errorData.message);
+			} else if (errorData?.remainingAttempts !== undefined) {
+				setOtpError(`Invalid OTP. ${errorData.remainingAttempts} attempt(s) remaining`);
+			} else {
+				setOtpError(errorData?.message || "Failed to verify OTP");
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -146,12 +172,18 @@ const LoginPage = () => {
 									type='tel'
 									required
 									value={phoneNumber}
-									onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-									className='block w-full px-4 py-3 bg-white border border-stone-300 rounded-md
-									text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-800 focus:border-transparent
-									sm:text-sm transition-all'
+									onChange={(e) => {
+										setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10));
+										setPhoneError("");
+									}}
+									className={`block w-full px-4 py-3 bg-white border rounded-md
+									text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:border-transparent
+									sm:text-sm transition-all ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-stone-300 focus:ring-stone-800'}`}
 									placeholder='10-digit mobile number'
 								/>
+								{phoneError && (
+									<p className='mt-2 text-sm text-red-600'>{phoneError}</p>
+								)}
 							</div>
 
 							<button
@@ -176,13 +208,23 @@ const LoginPage = () => {
 									type='text'
 									required
 									value={otp}
-									onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-									className='block w-full px-4 py-3 bg-white border border-stone-300 rounded-md
-									text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-800 focus:border-transparent
-									sm:text-sm text-center text-lg font-mono tracking-widest transition-all'
+									onChange={(e) => {
+										setOtp(e.target.value.replace(/\D/g, "").slice(0, 6));
+										setOtpError("");
+										setOtpSuccess("");
+									}}
+									className={`block w-full px-4 py-3 bg-white border rounded-md
+									text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:border-transparent
+									sm:text-sm text-center text-lg font-mono tracking-widest transition-all ${otpError ? 'border-red-500 focus:ring-red-500' : otpSuccess ? 'border-green-500 focus:ring-green-500' : 'border-stone-300 focus:ring-stone-800'}`}
 									placeholder='000000'
 									maxLength={6}
 								/>
+								{otpError && (
+									<p className='mt-2 text-sm text-red-600'>{otpError}</p>
+								)}
+								{otpSuccess && (
+									<p className='mt-2 text-sm text-green-600'>{otpSuccess}</p>
+								)}
 							</div>
 
 							<button

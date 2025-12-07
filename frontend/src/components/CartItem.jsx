@@ -29,8 +29,9 @@ const CartItem = ({ item }) => {
 					<p className='text-sm font-medium text-stone-900 min-w-[1.5rem] text-center'>{item.quantity}</p>
 					<button
 						className='h-7 w-7 flex items-center justify-center border border-stone-300 rounded-md
-						 bg-white hover:bg-stone-100 focus:outline-none transition-colors'
+						 bg-white hover:bg-stone-100 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
 						onClick={() => updateQuantity(item._id, item.quantity + 1)}
+						disabled={item.quantity >= 5}
 					>
 						<Plus className='text-stone-700' size={12} />
 					</button>

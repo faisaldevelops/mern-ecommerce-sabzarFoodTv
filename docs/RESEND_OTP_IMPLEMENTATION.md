@@ -12,7 +12,7 @@ This document describes the implementation of resend OTP functionality with thro
 
 **New Features:**
 - Added throttling configuration constants:
-  - `RESEND_COOLDOWN_SECONDS = 30`: Minimum time between OTP requests
+  - `RESEND_COOLDOWN_SECONDS = 60`: Minimum time between OTP requests
   - `MAX_RESENDS_PER_WINDOW = 3`: Maximum resends allowed per window
   - `THROTTLE_WINDOW_MINUTES = 15`: Time window for tracking resends
 
@@ -41,7 +41,7 @@ router.post("/resend", resendOTP);
 
 **New Features:**
 - Added resend button on OTP verification screen
-- Countdown timer showing remaining wait time (30 seconds)
+- Countdown timer showing remaining wait time (60 seconds)
 - Graceful error handling for throttling
 
 **New State:**
@@ -146,7 +146,7 @@ Check throttle data
 
 1. **Resend Button**
    - Disabled during cooldown period
-   - Shows countdown timer: "Resend in 30s", "Resend in 29s", etc.
+   - Shows countdown timer: "Resend in 60s", "Resend in 59s", etc.
    - Enabled after cooldown: "Resend Code"
    - Shows loading state: "Sending..."
 
@@ -164,7 +164,7 @@ Check throttle data
 ### Implemented Security Measures
 
 1. **Rate Limiting**: Prevents spam and brute-force attacks
-2. **Cooldown Period**: 30-second minimum between requests
+2. **Cooldown Period**: 60-second minimum between requests
 3. **Maximum Attempts**: 3 resends per 15-minute window
 4. **Phone Validation**: 10-digit format required
 5. **Throttle Cleanup**: Data cleared on successful verification
@@ -233,7 +233,7 @@ pytest test_otp.py::TestOTPThrottling::test_cooldown_period_enforcement -v
 ### Test Configuration
 
 Constants are defined at the top of `test_otp.py`:
-- `RESEND_COOLDOWN_SECONDS = 30`
+- `RESEND_COOLDOWN_SECONDS = 60`
 - `MAX_RESENDS_PER_WINDOW = 3`
 - `THROTTLE_WINDOW_MINUTES = 15`
 
@@ -261,7 +261,7 @@ No new environment variables required. The feature uses existing Twilio configur
 
 3. **Configuration**: Consider making throttling constants configurable via environment variables:
    ```env
-   OTP_RESEND_COOLDOWN_SECONDS=30
+   OTP_RESEND_COOLDOWN_SECONDS=60
    OTP_MAX_RESENDS_PER_WINDOW=3
    OTP_THROTTLE_WINDOW_MINUTES=15
    ```

@@ -3,6 +3,7 @@ import axios from "../lib/axios";
 import { toast } from "react-hot-toast";
 
 const CART_STORAGE_KEY = "guest_cart";
+const MAX_QUANTITY_PER_ITEM = 5; // Maximum quantity allowed per item in cart
 
 // Helper functions for localStorage
 const getLocalCart = () => {
@@ -77,6 +78,13 @@ export const useCartStore = create((set, get) => ({
 	
 	addToCart: async (product) => {
 		try {
+			// Check if item already exists and enforce max quantity
+			const existingItem = get().cart.find((item) => item._id === product._id);
+			if (existingItem && existingItem.quantity >= MAX_QUANTITY_PER_ITEM) {
+				toast.error(`Maximum quantity of ${MAX_QUANTITY_PER_ITEM} per item allowed`);
+				return;
+			}
+			
 			// Try to add to server cart first
 			const response = await axios.post("/cart", { productId: product._id });
 			
@@ -87,7 +95,7 @@ export const useCartStore = create((set, get) => ({
 					const existingItem = prevState.cart.find((item) => item._id === product._id);
 					const newCart = existingItem
 						? prevState.cart.map((item) =>
-								item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+								item._id === product._id ? { ...item, quantity: Math.min(item.quantity + 1, MAX_QUANTITY_PER_ITEM) } : item
 						  )
 						: [...prevState.cart, { ...product, quantity: 1 }];
 					setLocalCart(newCart);
@@ -102,7 +110,7 @@ export const useCartStore = create((set, get) => ({
 					const existingItem = prevState.cart.find((item) => item._id === product._id);
 					const newCart = existingItem
 						? prevState.cart.map((item) =>
-								item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+								item._id === product._id ? { ...item, quantity: Math.min(item.quantity + 1, MAX_QUANTITY_PER_ITEM) } : item
 						  )
 						: [...prevState.cart, { ...product, quantity: 1 }];
 					return { cart: newCart };
@@ -132,6 +140,12 @@ export const useCartStore = create((set, get) => ({
 	updateQuantity: async (productId, quantity) => {
 		if (quantity === 0) {
 			get().removeFromCart(productId);
+			return;
+		}
+		
+		// Enforce max quantity
+		if (quantity > MAX_QUANTITY_PER_ITEM) {
+			toast.error(`Maximum quantity of ${MAX_QUANTITY_PER_ITEM} per item allowed`);
 			return;
 		}
 
