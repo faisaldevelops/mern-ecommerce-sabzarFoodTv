@@ -6,6 +6,8 @@ import { useUserStore } from "../stores/useUserStore";
 import { useNavigate } from "react-router-dom";
 import PhoneAuthModal from "./PhoneAuthModal";
 
+const MAX_QUANTITY_PER_ITEM = 5; // Maximum quantity allowed per item
+
 const BuyNowModal = ({ isOpen, onClose, product }) => {
   const [quantity, setQuantity] = useState(1);
   const [showPhoneAuth, setShowPhoneAuth] = useState(false);
@@ -13,8 +15,8 @@ const BuyNowModal = ({ isOpen, onClose, product }) => {
   const navigate = useNavigate();
 
   const handleIncrement = () => {
-    if (quantity >= 5) {
-      toast.error("Maximum quantity of 5 per item allowed");
+    if (quantity >= MAX_QUANTITY_PER_ITEM) {
+      toast.error(`Maximum quantity of ${MAX_QUANTITY_PER_ITEM} per item allowed`);
       return;
     }
     if (quantity < product.stockQuantity) {
