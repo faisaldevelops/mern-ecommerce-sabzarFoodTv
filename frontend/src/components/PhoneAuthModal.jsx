@@ -15,22 +15,27 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendLoading, setResendLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpSuccess, setOtpSuccess] = useState("");
+  const [nameError, setNameError] = useState("");
   const { checkAuth } = useUserStore();
   const { fetchAddresses } = useAddressStore();
   const { syncGuestCart } = useCartStore();
 
   const handleSendOTP = async (e) => {
     e.preventDefault();
+    setPhoneError("");
     
     if (!/^\d{10}$/.test(phoneNumber)) {
-      toast.error("Please enter a valid 10-digit phone number");
+      setPhoneError("Please enter a valid 10-digit phone number");
       return;
     }
 
     setLoading(true);
     try {
       const response = await axios.post("/otp/send", { phoneNumber });
-      toast.success(response.data.message);
+      setOtpSuccess("OTP sent successfully");
       
       // In development, show OTP in toast
       // if (response.data.otp) {
@@ -39,8 +44,16 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
       
       setStep("otp");
       setResendCooldown(60); // Start 60-second cooldown
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setOtpSuccess(""), 3000);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to send OTP");
+      const errorData = error.response?.data;
+      if (errorData?.reason === "frozen") {
+        setPhoneError(errorData.message);
+      } else {
+        setPhoneError(errorData?.message || "Failed to send OTP");
+      }
     } finally {
       setLoading(false);
     }
@@ -52,9 +65,11 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
     }
 
     setResendLoading(true);
+    setOtpError("");
+    setOtpSuccess("");
     try {
       const response = await axios.post("/otp/resend", { phoneNumber });
-      toast.success(response.data.message);
+      setOtpSuccess("OTP resent successfully");
       
       // In development, show OTP in toast
       if (response.data.otp) {
@@ -62,14 +77,17 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
       }
       
       setResendCooldown(60); // Reset 60-second cooldown
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setOtpSuccess(""), 3000);
     } catch (error) {
       const errorData = error.response?.data;
       if (errorData?.reason === "cooldown" && errorData?.waitTime) {
-        toast.error(`Please wait ${errorData.waitTime} seconds before resending`);
+        setOtpError(`Please wait ${errorData.waitTime} seconds before resending`);
       } else if (errorData?.reason === "limit_reached" && errorData?.resetInMinutes) {
-        toast.error(`Too many attempts. Try again in ${errorData.resetInMinutes} minute(s)`);
+        setOtpError(`Too many attempts. Try again in ${errorData.resetInMinutes} minute(s)`);
       } else {
-        toast.error(errorData?.message || "Failed to resend OTP");
+        setOtpError(errorData?.message || "Failed to resend OTP");
       }
     } finally {
       setResendLoading(false);
@@ -88,9 +106,11 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
+    setOtpError("");
+    setOtpSuccess("");
     
     if (!otp || otp.length !== 6) {
-      toast.error("Please enter the 6-digit OTP");
+      setOtpError("Please enter the 6-digit OTP");
       return;
     }
 
@@ -102,7 +122,7 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
         name: name || "User", // Default name if not provided
       });
       
-      toast.success(response.data.message);
+      setOtpSuccess(response.data.message);
       
       // Refresh auth state
       await checkAuth();
@@ -121,7 +141,14 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
       // Close modal after callback is done
       handleClose();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to verify OTP");
+      const errorData = error.response?.data;
+      if (errorData?.reason === "frozen") {
+        setOtpError(errorData.message);
+      } else if (errorData?.remainingAttempts !== undefined) {
+        setOtpError(`Invalid OTP. ${errorData.remainingAttempts} attempt(s) remaining`);
+      } else {
+        setOtpError(errorData?.message || "Failed to verify OTP");
+      }
     } finally {
       setLoading(false);
     }
@@ -134,6 +161,10 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
     setName("");
     setLoading(false);
     setResendCooldown(0);
+    setPhoneError("");
+    setOtpError("");
+    setOtpSuccess("");
+    setNameError("");
     onClose();
   };
 
@@ -149,18 +180,18 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
         onClick={handleClose}
       />
       <motion.div
-        className="relative z-10 w-full max-w-md rounded-lg border border-gray-700 bg-gray-800 p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-lg border border-stone-200 bg-white p-6 shadow-xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
       >
         <div className="mb-4 flex items-start justify-between">
-          <h3 className="text-2xl font-semibold text-emerald-400">
+          <h3 className="text-2xl font-semibold text-stone-900">
             {step === "phone" ? "Login / Sign Up" : "Verify OTP"}
           </h3>
           <button
             onClick={handleClose}
-            className="text-gray-300 hover:text-white"
+            className="text-stone-600 hover:text-stone-900"
             disabled={loading}
           >
             <X size={20} />
@@ -170,29 +201,36 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
         {step === "phone" ? (
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-stone-700 mb-2">
                 Phone Number
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400" size={20} />
                 <input
                   type="tel"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  onChange={(e) => {
+                    setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10));
+                    setPhoneError("");
+                  }}
                   placeholder="Enter 10-digit mobile number"
-                  className="w-full rounded-md border border-gray-700 bg-gray-900 px-10 py-2.5 text-white focus:ring-2 focus:ring-emerald-300"
+                  className={`w-full rounded-md border px-10 py-2.5 focus:ring-2 focus:border-transparent ${phoneError ? 'border-red-500 bg-red-50 text-red-900 focus:ring-red-500' : 'border-stone-300 bg-white text-stone-900 focus:ring-stone-800'}`}
                   required
                   disabled={loading}
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-400">
-                We'll send you a verification code
-              </p>
+              {phoneError ? (
+                <p className="mt-1 text-xs text-red-600">{phoneError}</p>
+              ) : (
+                <p className="mt-1 text-xs text-stone-500">
+                  We'll send you a verification code
+                </p>
+              )}
             </div>
 
             <motion.button
               type="submit"
-              className="w-full rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-stone-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-stone-700 focus:outline-none focus:ring-4 focus:ring-stone-300 disabled:opacity-50 disabled:cursor-not-allowed"
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
               disabled={loading}
@@ -203,26 +241,36 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
         ) : (
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-stone-700 mb-2">
                 Enter OTP sent to +91{phoneNumber}
               </label>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400" size={20} />
                 <input
                   type="text"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={(e) => {
+                    setOtp(e.target.value.replace(/\D/g, "").slice(0, 6));
+                    setOtpError("");
+                    setOtpSuccess("");
+                  }}
                   placeholder="Enter 6-digit OTP"
-                  className="w-full rounded-md border border-gray-700 bg-gray-900 px-10 py-2.5 text-white focus:ring-2 focus:ring-emerald-300 text-center text-2xl tracking-widest"
+                  className={`w-full rounded-md border px-10 py-2.5 text-center text-2xl tracking-widest focus:ring-2 focus:border-transparent ${otpError ? 'border-red-500 bg-red-50 text-red-900 focus:ring-red-500' : otpSuccess ? 'border-green-500 bg-green-50 text-green-900 focus:ring-green-500' : 'border-stone-300 bg-white text-stone-900 focus:ring-stone-800'}`}
                   required
                   disabled={loading}
                   maxLength={6}
                 />
               </div>
+              {otpError && (
+                <p className="mt-1 text-xs text-red-600">{otpError}</p>
+              )}
+              {otpSuccess && (
+                <p className="mt-1 text-xs text-green-600">{otpSuccess}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-stone-700 mb-2">
                 Your Name (optional for returning users)
               </label>
               <input
@@ -230,17 +278,17 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="w-full rounded-md border border-gray-700 bg-gray-900 px-4 py-2.5 text-white focus:ring-2 focus:ring-emerald-300"
+                className="w-full rounded-md border border-stone-300 bg-white px-4 py-2.5 text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
                 disabled={loading}
               />
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-stone-500">
                 Required for new users only
               </p>
             </div>
 
             <motion.button
               type="submit"
-              className="w-full rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-stone-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-stone-700 focus:outline-none focus:ring-4 focus:ring-stone-300 disabled:opacity-50 disabled:cursor-not-allowed"
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
               disabled={loading}
@@ -255,8 +303,10 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
                   setStep("phone");
                   setOtp("");
                   setResendCooldown(0);
+                  setOtpError("");
+                  setOtpSuccess("");
                 }}
-                className="text-sm text-emerald-400 hover:text-emerald-300"
+                className="text-sm text-stone-800 hover:text-stone-700"
                 disabled={loading || resendLoading}
               >
                 Change phone number
@@ -265,7 +315,7 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
               <button
                 type="button"
                 onClick={handleResendOTP}
-                className="text-sm text-emerald-400 hover:text-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-sm text-stone-800 hover:text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading || resendLoading || resendCooldown > 0}
               >
                 {resendLoading ? (
