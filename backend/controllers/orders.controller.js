@@ -23,12 +23,24 @@ export const getOrdersData = async (req, res) => {
 		
 		// Filter by status (trackingStatus)
 		if (status && status !== 'all') {
+			// Validate status is one of the allowed values
+			const allowedStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+			if (!allowedStatuses.includes(status)) {
+				return res.status(400).json({ 
+					success: false, 
+					message: 'Invalid status value' 
+				});
+			}
 			filter.trackingStatus = status;
 		}
 		
 		// Filter by phone number in address (database-level filtering)
 		if (phoneNumber) {
-			filter['address.phoneNumber'] = { $regex: phoneNumber, $options: 'i' };
+			// Escape special regex characters and limit to alphanumeric, spaces, dashes, plus
+			const sanitizedPhone = phoneNumber.replace(/[^0-9+\-\s()]/g, '');
+			if (sanitizedPhone) {
+				filter['address.phoneNumber'] = { $regex: sanitizedPhone, $options: 'i' };
+			}
 		}
 		
 		// Find all orders with filters and populate the user and product references.
