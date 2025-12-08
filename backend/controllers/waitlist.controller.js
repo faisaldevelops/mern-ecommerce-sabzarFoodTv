@@ -1,5 +1,16 @@
 import { redis } from "../lib/redis.js";
 import Product from "../models/product.model.js";
+import twilio from "twilio";
+
+// Twilio configuration
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+let twilioClient = null;
+if (accountSid && authToken) {
+	twilioClient = twilio(accountSid, authToken);
+}
 
 // TTL for waitlist entries (30 days in seconds)
 const WAITLIST_TTL = 30 * 24 * 60 * 60;
@@ -11,12 +22,21 @@ const WAITLIST_TTL = 30 * 24 * 60 * 60;
 export const addToWaitlist = async (req, res) => {
 	try {
 		const { id: productId } = req.params;
-		const { email, phoneNumber } = req.body;
+		const { phoneNumber } = req.body;
 
-		if (!email && !phoneNumber) {
+		if (!phoneNumber) {
 			return res.status(400).json({
 				success: false,
-				message: "Either email or phone number is required"
+				message: "Phone number is required"
+			});
+		}
+
+		// Validate phone number format (10 digits)
+		const phoneRegex = /^\d{10}$/;
+		if (!phoneRegex.test(phoneNumber)) {
+			return res.status(400).json({
+				success: false,
+				message: "Invalid phone number format. Must be 10 digits."
 			});
 		}
 
@@ -29,12 +49,11 @@ export const addToWaitlist = async (req, res) => {
 			});
 		}
 
-		// Create unique identifier for the user
-		const userId = email || phoneNumber;
+		// Use phone number as unique identifier
 		const waitlistKey = `waitlist:${productId}`;
 
 		// Check if user is already on the waitlist
-		const existingEntry = await redis.hget(waitlistKey, userId);
+		const existingEntry = await redis.hget(waitlistKey, phoneNumber);
 		if (existingEntry) {
 			return res.status(200).json({
 				success: true,
@@ -45,20 +64,19 @@ export const addToWaitlist = async (req, res) => {
 
 		// Add user to waitlist with timestamp
 		const waitlistData = JSON.stringify({
-			email: email || null,
-			phoneNumber: phoneNumber || null,
+			phoneNumber,
 			subscribedAt: new Date().toISOString(),
 			productName: product.name
 		});
 
-		await redis.hset(waitlistKey, userId, waitlistData);
+		await redis.hset(waitlistKey, phoneNumber, waitlistData);
 		
 		// Set expiration on the waitlist hash (renew TTL)
 		await redis.expire(waitlistKey, WAITLIST_TTL);
 
 		return res.status(200).json({
 			success: true,
-			message: `You will be notified when ${product.name} is back in stock`,
+			message: `You will be notified via SMS when ${product.name} is back in stock`,
 			alreadySubscribed: false
 		});
 	} catch (error) {
@@ -103,12 +121,10 @@ export const getWaitlist = async (req, res) => {
 		}
 
 		// Parse and format waitlist entries
-		const waitlist = Object.entries(waitlistData).map(([userId, data]) => {
+		const waitlist = Object.entries(waitlistData).map(([phoneNumber, data]) => {
 			const parsed = JSON.parse(data);
 			return {
-				userId,
-				email: parsed.email,
-				phoneNumber: parsed.phoneNumber,
+				phoneNumber,
 				subscribedAt: parsed.subscribedAt
 			};
 		});
@@ -134,7 +150,7 @@ export const getWaitlist = async (req, res) => {
 
 /**
  * Notify waitlist users when product is back in stock
- * This would typically be called when stock is updated
+ * Uses Twilio SMS for notifications (same as OTP flow)
  */
 export const notifyWaitlist = async (productId) => {
 	try {
@@ -155,40 +171,48 @@ export const notifyWaitlist = async (productId) => {
 		}
 
 		// Parse waitlist entries
-		const waitlist = Object.entries(waitlistData).map(([userId, data]) => {
+		const waitlist = Object.entries(waitlistData).map(([phoneNumber, data]) => {
 			const parsed = JSON.parse(data);
 			return {
-				userId,
-				email: parsed.email,
-				phoneNumber: parsed.phoneNumber
+				phoneNumber
 			};
 		});
 
-		console.log(`📧 Notifying ${waitlist.length} users about ${product.name} being back in stock`);
+		console.log(`📱 Notifying ${waitlist.length} users about ${product.name} being back in stock`);
 		
-		// TODO: Implement actual notification logic here
-		// This could be integrated with email services (SendGrid, AWS SES, Nodemailer)
-		// or SMS services (Twilio - already available in the project)
-		// Example implementations:
-		// - Email: await sendEmail(user.email, 'Back in Stock', template)
-		// - SMS: await twilioClient.messages.create({ to: user.phoneNumber, body: message })
-		// For now, we log the notifications and clear the waitlist
-		
+		let notifiedCount = 0;
+		let failedCount = 0;
+
+		// Send SMS to each user using Twilio
 		for (const user of waitlist) {
-			if (user.email) {
-				console.log(`  📧 Would send email to: ${user.email}`);
-				// await sendEmail(user.email, 'Back in Stock', `${product.name} is now available!`);
-			}
 			if (user.phoneNumber) {
-				console.log(`  📱 Would send SMS to: ${user.phoneNumber}`);
-				// await sendSMS(user.phoneNumber, `${product.name} is now available!`);
+				try {
+					if (twilioClient && twilioPhoneNumber) {
+						const message = `Great news! ${product.name} is back in stock. Order now!`;
+						await twilioClient.messages.create({
+							body: message,
+							from: twilioPhoneNumber,
+							to: `+91${user.phoneNumber}`, // Assuming Indian phone numbers
+						});
+						console.log(`  ✓ SMS sent to ${user.phoneNumber}`);
+						notifiedCount++;
+					} else {
+						// Development mode - just log
+						console.log(`  📱 Would send SMS to ${user.phoneNumber}: ${product.name} is back in stock!`);
+						notifiedCount++;
+					}
+				} catch (error) {
+					console.error(`  ✗ Failed to send SMS to ${user.phoneNumber}:`, error.message);
+					failedCount++;
+				}
 			}
 		}
 
 		// Clear the waitlist after notifying
 		await redis.del(waitlistKey);
 
-		return { success: true, notified: waitlist.length };
+		console.log(`✓ Notified ${notifiedCount} users, ${failedCount} failed`);
+		return { success: true, notified: notifiedCount, failed: failedCount };
 	} catch (error) {
 		console.error("Error notifying waitlist:", error);
 		return { success: false, error: error.message };
@@ -202,20 +226,19 @@ export const notifyWaitlist = async (productId) => {
 export const removeFromWaitlist = async (req, res) => {
 	try {
 		const { id: productId } = req.params;
-		const { email, phoneNumber } = req.body;
+		const { phoneNumber } = req.body;
 
-		if (!email && !phoneNumber) {
+		if (!phoneNumber) {
 			return res.status(400).json({
 				success: false,
-				message: "Either email or phone number is required"
+				message: "Phone number is required"
 			});
 		}
 
-		const userId = email || phoneNumber;
 		const waitlistKey = `waitlist:${productId}`;
 
 		// Remove user from waitlist
-		const removed = await redis.hdel(waitlistKey, userId);
+		const removed = await redis.hdel(waitlistKey, phoneNumber);
 
 		if (removed === 0) {
 			return res.status(404).json({

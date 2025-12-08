@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { X, Bell, Mail, Phone } from "lucide-react";
+import { X, Bell, Phone, Mail, MessageCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "../lib/axios";
 
 const WaitlistModal = ({ isOpen, onClose, product }) => {
-	const [email, setEmail] = useState("");
 	const [phoneNumber, setPhoneNumber] = useState("");
-	const [contactMethod, setContactMethod] = useState("email"); // 'email' or 'phone'
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	if (!isOpen) return null;
@@ -14,36 +12,24 @@ const WaitlistModal = ({ isOpen, onClose, product }) => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		
-		const contactValue = contactMethod === "email" ? email : phoneNumber;
-		
-		if (!contactValue) {
-			toast.error(`Please enter your ${contactMethod === "email" ? "email" : "phone number"}`);
+		if (!phoneNumber) {
+			toast.error("Please enter your phone number");
 			return;
 		}
 
-		// Basic email validation
-		if (contactMethod === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-			toast.error("Please enter a valid email address");
+		// Phone validation (10 digits for Indian numbers)
+		const cleanedPhone = phoneNumber.replace(/[\s\-\(\)\+]/g, "");
+		if (!/^\d{10}$/.test(cleanedPhone)) {
+			toast.error("Please enter a valid 10-digit phone number");
 			return;
-		}
-
-		// Phone validation - allow various formats (digits, spaces, dashes, parentheses, plus sign)
-		if (contactMethod === "phone") {
-			const cleanedPhone = phoneNumber.replace(/[\s\-\(\)\+]/g, "");
-			if (!/^\d{10,15}$/.test(cleanedPhone)) {
-				toast.error("Please enter a valid phone number (10-15 digits)");
-				return;
-			}
 		}
 
 		setIsSubmitting(true);
 
 		try {
-			const payload = contactMethod === "email" 
-				? { email } 
-				: { phoneNumber };
-
-			const response = await axios.post(`/products/${product._id}/waitlist`, payload);
+			const response = await axios.post(`/products/${product._id}/waitlist`, {
+				phoneNumber: cleanedPhone
+			});
 
 			if (response.data.success) {
 				if (response.data.alreadySubscribed) {
@@ -51,7 +37,6 @@ const WaitlistModal = ({ isOpen, onClose, product }) => {
 				} else {
 					toast.success(`✅ ${response.data.message}`);
 				}
-				setEmail("");
 				setPhoneNumber("");
 				onClose();
 			}
@@ -86,80 +71,63 @@ const WaitlistModal = ({ isOpen, onClose, product }) => {
 						</h2>
 					</div>
 					<p className="text-gray-600">
-						Get notified when <span className="font-semibold">{product.name}</span> is back in stock
+						Get notified via SMS when <span className="font-semibold">{product.name}</span> is back in stock
 					</p>
 				</div>
 
 				{/* Form */}
 				<form onSubmit={handleSubmit}>
-					{/* Contact method selector */}
+					{/* Notification method info */}
 					<div className="mb-4">
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							How would you like to be notified?
+						<label className="block text-sm font-medium text-gray-700 mb-3">
+							Notification Method
 						</label>
-						<div className="flex gap-3">
-							<button
-								type="button"
-								onClick={() => setContactMethod("email")}
-								className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md border ${
-									contactMethod === "email"
-										? "bg-emerald-50 border-emerald-500 text-emerald-700"
-										: "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-								} transition-colors`}
-							>
-								<Mail size={18} />
-								Email
-							</button>
-							<button
-								type="button"
-								onClick={() => setContactMethod("phone")}
-								className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md border ${
-									contactMethod === "phone"
-										? "bg-emerald-50 border-emerald-500 text-emerald-700"
-										: "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-								} transition-colors`}
-							>
-								<Phone size={18} />
-								SMS
-							</button>
+						<div className="space-y-2">
+							{/* SMS - Active */}
+							<div className="flex items-center gap-3 p-3 rounded-md border-2 border-emerald-500 bg-emerald-50">
+								<Phone className="text-emerald-600" size={20} />
+								<div className="flex-1">
+									<div className="font-medium text-emerald-700">SMS</div>
+									<div className="text-xs text-emerald-600">Active</div>
+								</div>
+							</div>
+							
+							{/* Email - Coming Soon */}
+							<div className="flex items-center gap-3 p-3 rounded-md border border-gray-200 bg-gray-50 opacity-60">
+								<Mail className="text-gray-400" size={20} />
+								<div className="flex-1">
+									<div className="font-medium text-gray-700">Email</div>
+									<div className="text-xs text-gray-500">Coming Soon</div>
+								</div>
+							</div>
+							
+							{/* WhatsApp - Coming Soon */}
+							<div className="flex items-center gap-3 p-3 rounded-md border border-gray-200 bg-gray-50 opacity-60">
+								<MessageCircle className="text-gray-400" size={20} />
+								<div className="flex-1">
+									<div className="font-medium text-gray-700">WhatsApp</div>
+									<div className="text-xs text-gray-500">Coming Soon</div>
+								</div>
+							</div>
 						</div>
 					</div>
 
-					{/* Email input */}
-					{contactMethod === "email" && (
-						<div className="mb-4">
-							<label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-								Email Address
-							</label>
-							<input
-								type="email"
-								id="email"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								placeholder="your@email.com"
-								className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-								required
-							/>
-						</div>
-					)}
-
 					{/* Phone input */}
-					{contactMethod === "phone" && (
-						<div className="mb-4">
-							<label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-								Phone Number
-							</label>
-							<input
-								type="tel"
-								id="phone"
-								value={phoneNumber}
-								onChange={(e) => setPhoneNumber(e.target.value)}
-								placeholder="+91 1234567890"
-								className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-								required
-							/>
-						</div>
-					)}
+					<div className="mb-4">
+						<label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+							Phone Number
+						</label>
+						<input
+							type="tel"
+							id="phone"
+							value={phoneNumber}
+							onChange={(e) => setPhoneNumber(e.target.value)}
+							placeholder="1234567890"
+							className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+							required
+						/>
+						<p className="mt-1 text-xs text-gray-500">Enter 10-digit mobile number (without +91)</p>
+					</div>
 
 					{/* Submit button */}
 					<div className="flex gap-3">
@@ -194,7 +162,7 @@ const WaitlistModal = ({ isOpen, onClose, product }) => {
 
 				{/* Privacy note */}
 				<p className="mt-4 text-xs text-gray-500 text-center">
-					We'll only use your contact information to notify you about this product's availability.
+					We'll send you a one-time SMS when this product is available.
 				</p>
 			</div>
 		</div>
