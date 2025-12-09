@@ -101,11 +101,7 @@ const ProductCard = ({ product }) => {
 							<span className='text-xl font-bold text-stone-900'>
 								₹{product.price}
 							</span>
-							{!isOutOfStock && (
-								<span className='text-xs text-stone-500'>
-									Qty: {availableStock}
-								</span>
-							)}
+							
 						</div>
 						
 						<div className='flex sm:flex-row flex-col gap-2'>
