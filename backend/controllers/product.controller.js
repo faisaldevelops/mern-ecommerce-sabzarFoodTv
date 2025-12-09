@@ -136,8 +136,8 @@ const updateStock = (stockQuantity, product) => {
 	const isNowInStock = (product.stockQuantity || 0) - (product.reservedQuantity || 0) > 0;
 
 	if (wasOutOfStock && isNowInStock) {
-		console.log(`Product ${updatedProduct.name} is back in stock, notifying waitlist...`);
-		notifyWaitlist(updatedProduct._id.toString()).catch(err => {
+		console.log(`Product ${product.name} is back in stock, notifying waitlist...`);
+		notifyWaitlist(product._id.toString()).catch(err => {
 			console.error("Error notifying waitlist:", err);
 		});
 	}
@@ -179,7 +179,8 @@ export const updateProduct = async (req, res) => {
 		if (price !== undefined) product.price = price;
 		if (stockQuantity !== undefined) updateStock(stockQuantity, product);
 		if (cloudinaryResponse?.secure_url) product.image = cloudinaryResponse.secure_url;
-
+		console.log(product);
+		
 		const updatedProduct = await product.save();
 		res.json(updatedProduct);
 	} catch (error) {
