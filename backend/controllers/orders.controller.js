@@ -5,14 +5,14 @@ import mongoose from "mongoose";
 export const getOrdersData = async (req, res) => {
 	try {
 		// Extract filter parameters from query
-		const { phoneNumber, orderId, status } = req.query;
+		const { phoneNumber, publicOrderId, status } = req.query;
 		
 		// Build filter object
 		let filter = {};
 		
 		// Filter by publicOrderId
-		if (orderId) {
-			filter.publicOrderId = orderId;
+		if (publicOrderId) {
+			filter.publicOrderId = publicOrderId;
 		}
 		
 		// Filter by status (trackingStatus)
@@ -32,7 +32,16 @@ export const getOrdersData = async (req, res) => {
 		if (phoneNumber) {
 			const sanitizedPhone = phoneNumber.replace(/[^0-9+\-\s()]/g, '');
 			if (sanitizedPhone) {
-				filter['user.phoneNumber'] = { $regex: sanitizedPhone, $options: 'i' };
+				// Find user IDs matching phone number
+				const User = mongoose.model('User');
+				const users = await User.find({ phoneNumber: { $regex: sanitizedPhone, $options: 'i' } }, '_id');
+				const userIds = users.map(u => u._id);
+				if (userIds.length > 0) {
+					filter.user = { $in: userIds };
+				} else {
+					// No users match, so no orders will match
+					filter.user = null;
+				}
 			}
 		}
 		
