@@ -76,7 +76,7 @@ export const addToWaitlist = async (req, res) => {
 
 		return res.status(200).json({
 			success: true,
-			message: `You will be notified via SMS when ${product.name} is back in stock`,
+			message: `You will be notified on WhatsApp when ${product.name} is back in stock`,
 			alreadySubscribed: false
 		});
 	} catch (error) {

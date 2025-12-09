@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { X, Bell, Phone, Mail, MessageCircle } from "lucide-react";
+import { X, MessageCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "../lib/axios";
+import { useUserStore } from "../stores/useUserStore";
 
 const WaitlistModal = ({ isOpen, onClose, product }) => {
+	const { user } = useUserStore();
 	const [phoneNumber, setPhoneNumber] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -12,21 +14,28 @@ const WaitlistModal = ({ isOpen, onClose, product }) => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		
-		if (!phoneNumber) {
+		// Use logged-in user's phone number if available, otherwise use input
+		const userPhoneNumber = user?.phoneNumber;
+		const finalPhoneNumber = userPhoneNumber || phoneNumber;
+		
+		if (!finalPhoneNumber) {
 			toast.error("Please enter your phone number");
 			return;
 		}
 
-		// Phone validation (10 digits for Indian numbers)
-		const cleanedPhone = phoneNumber.replace(/[\s\-\(\)\+]/g, "");
-		if (!/^\d{10}$/.test(cleanedPhone)) {
-			toast.error("Please enter a valid 10-digit phone number");
-			return;
+		// Phone validation (10 digits for Indian numbers) - only validate if not using user's phone
+		if (!userPhoneNumber) {
+			const cleanedPhone = phoneNumber.replace(/[\s\-\(\)\+]/g, "");
+			if (!/^\d{10}$/.test(cleanedPhone)) {
+				toast.error("Please enter a valid 10-digit phone number");
+				return;
+			}
 		}
 
 		setIsSubmitting(true);
 
 		try {
+			const cleanedPhone = userPhoneNumber || phoneNumber.replace(/[\s\-\(\)\+]/g, "");
 			const response = await axios.post(`/products/${product._id}/waitlist`, {
 				phoneNumber: cleanedPhone
 			});
@@ -64,70 +73,50 @@ const WaitlistModal = ({ isOpen, onClose, product }) => {
 				<div className="mb-6">
 					<div className="flex items-center gap-3 mb-2">
 						<div className="bg-emerald-100 p-2 rounded-full">
-							<Bell className="text-emerald-600" size={24} />
+							<MessageCircle className="text-emerald-600" size={24} />
 						</div>
 						<h2 className="text-2xl font-bold text-gray-900">
 							Notify Me
 						</h2>
 					</div>
 					<p className="text-gray-600">
-						Get notified via SMS when <span className="font-semibold">{product.name}</span> is back in stock
+						Get notified on WhatsApp when <span className="font-semibold">{product.name}</span> is back in stock
 					</p>
 				</div>
 
 				{/* Form */}
 				<form onSubmit={handleSubmit}>
-					{/* Notification method info */}
+					{/* WhatsApp notification option */}
 					<div className="mb-4">
-						<label className="block text-sm font-medium text-gray-700 mb-3">
-							Notification Method
-						</label>
-						<div className="space-y-2">
-							{/* SMS - Active */}
-							<div className="flex items-center gap-3 p-3 rounded-md border-2 border-emerald-500 bg-emerald-50">
-								<Phone className="text-emerald-600" size={20} />
-								<div className="flex-1">
-									<div className="font-medium text-emerald-700">SMS</div>
-									<div className="text-xs text-emerald-600">Active</div>
-								</div>
-							</div>
-							
-							{/* Email - Coming Soon */}
-							<div className="flex items-center gap-3 p-3 rounded-md border border-gray-200 bg-gray-50 opacity-60">
-								<Mail className="text-gray-400" size={20} />
-								<div className="flex-1">
-									<div className="font-medium text-gray-700">Email</div>
-									<div className="text-xs text-gray-500">Coming Soon</div>
-								</div>
-							</div>
-							
-							{/* WhatsApp - Coming Soon */}
-							<div className="flex items-center gap-3 p-3 rounded-md border border-gray-200 bg-gray-50 opacity-60">
-								<MessageCircle className="text-gray-400" size={20} />
-								<div className="flex-1">
-									<div className="font-medium text-gray-700">WhatsApp</div>
-									<div className="text-xs text-gray-500">Coming Soon</div>
+						<div className="flex items-center gap-3 p-4 rounded-md border-2 border-emerald-500 bg-emerald-50">
+							<MessageCircle className="text-emerald-600" size={24} />
+							<div className="flex-1">
+								<div className="font-medium text-emerald-700">WhatsApp Notification</div>
+								<div className="text-sm text-emerald-600">
+									{user ? `We'll notify ${user.phoneNumber}` : "Enter your number to get notified"}
 								</div>
 							</div>
 						</div>
 					</div>
 
-					{/* Phone input */}
-					<div className="mb-4">
-						<label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-							Phone Number
-						</label>
-						<input
-							type="tel"
-							id="phone"
-							value={phoneNumber}
-							onChange={(e) => setPhoneNumber(e.target.value)}
-							placeholder="1234567890"
-							className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-							required
-						/>
-						<p className="mt-1 text-xs text-gray-500">Enter 10-digit mobile number (without +91)</p>
-					</div>
+					{/* Phone input - only show if user is not logged in */}
+					{!user && (
+						<div className="mb-4">
+							<label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+								Phone Number
+							</label>
+							<input
+								type="tel"
+								id="phone"
+								value={phoneNumber}
+								onChange={(e) => setPhoneNumber(e.target.value)}
+								placeholder="1234567890"
+								className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+								required
+							/>
+							<p className="mt-1 text-xs text-gray-500">Enter 10-digit mobile number (without +91)</p>
+						</div>
+					)}
 
 					{/* Submit button */}
 					<div className="flex gap-3">
@@ -152,7 +141,7 @@ const WaitlistModal = ({ isOpen, onClose, product }) => {
 								</>
 							) : (
 								<>
-									<Bell size={18} />
+									<MessageCircle size={18} />
 									Notify Me
 								</>
 							)}
@@ -162,7 +151,7 @@ const WaitlistModal = ({ isOpen, onClose, product }) => {
 
 				{/* Privacy note */}
 				<p className="mt-4 text-xs text-gray-500 text-center">
-					We'll send you a one-time SMS when this product is available.
+					We'll send you a WhatsApp message when this product is available.
 				</p>
 			</div>
 		</div>
