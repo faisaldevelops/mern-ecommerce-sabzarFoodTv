@@ -261,3 +261,139 @@ export const getOrderTracking = async (req, res) => {
 		res.status(500).json({ success: false, message: 'Server error fetching order tracking' });
 	}
 };
+
+export const exportOrdersCSV = async (req, res) => {
+	try {
+		// Extract filter parameters from query
+		const { phoneNumber, publicOrderId, status } = req.query;
+		
+		// Build filter object (same as getOrdersData)
+		let filter = {};
+		
+		if (publicOrderId) {
+			filter.publicOrderId = publicOrderId;
+		}
+		
+		if (status && status !== 'all') {
+			const allowedStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+			if (!allowedStatuses.includes(status)) {
+				return res.status(400).json({ 
+					success: false, 
+					message: 'Invalid status value' 
+				});
+			}
+			filter.trackingStatus = status;
+		}
+		
+		if (phoneNumber) {
+			const sanitizedPhone = phoneNumber.replace(/[^0-9+\-\s()]/g, '');
+			if (sanitizedPhone) {
+				const User = mongoose.model('User');
+				const users = await User.find({ phoneNumber: { $regex: sanitizedPhone, $options: 'i' } }, '_id');
+				const userIds = users.map(u => u._id);
+				if (userIds.length > 0) {
+					filter.user = { $in: userIds };
+				} else {
+					filter.user = null;
+				}
+			}
+		}
+		
+		// Find orders with filters
+		const orders = await Order.find(filter)
+			.populate('user', 'name email phoneNumber')
+			.populate({
+				path: 'products.product',
+				select: 'name price category',
+			})
+			.lean();
+
+		// Generate CSV content
+		const csvRows = [];
+		
+		// CSV Header
+		csvRows.push([
+			'Order ID',
+			'Order Date',
+			'Customer Name',
+			'Customer Phone',
+			'Customer Email',
+			'Product Name',
+			'Quantity',
+			'Price',
+			'Total Amount',
+			'Status',
+			'Tracking Number',
+			'House Number',
+			'Street Address',
+			'Landmark',
+			'City',
+			'State',
+			'Pincode'
+		].join(','));
+
+		// CSV Data
+		orders.forEach(order => {
+			const products = order.products || [];
+			const address = order.address || {};
+			const user = order.user || {};
+			
+			if (products.length === 0) {
+				// Order with no products
+				csvRows.push([
+					`"${order.publicOrderId || order._id}"`,
+					`"${new Date(order.createdAt).toLocaleDateString()}"`,
+					`"${user.name || 'N/A'}"`,
+					`"${user.phoneNumber || 'N/A'}"`,
+					`"${user.email || 'N/A'}"`,
+					'',
+					'',
+					'',
+					`"${order.totalAmount}"`,
+					`"${order.trackingStatus}"`,
+					`"${order.trackingNumber || 'N/A'}"`,
+					`"${address.houseNumber || ''}"`,
+					`"${address.streetAddress || ''}"`,
+					`"${address.landmark || ''}"`,
+					`"${address.city || ''}"`,
+					`"${address.state || ''}"`,
+					`"${address.pincode || ''}"`
+				].join(','));
+			} else {
+				products.forEach((p, index) => {
+					const prod = p.product;
+					csvRows.push([
+						`"${order.publicOrderId || order._id}"`,
+						`"${new Date(order.createdAt).toLocaleDateString()}"`,
+						`"${user.name || 'N/A'}"`,
+						`"${user.phoneNumber || 'N/A'}"`,
+						`"${user.email || 'N/A'}"`,
+						`"${prod?.name || 'PRODUCT_REMOVED'}"`,
+						`"${p.quantity}"`,
+						`"${prod?.price || p.price}"`,
+						index === 0 ? `"${order.totalAmount}"` : '""', // Only show total amount on first product row
+						index === 0 ? `"${order.trackingStatus}"` : '""',
+						index === 0 ? `"${order.trackingNumber || 'N/A'}"` : '""',
+						index === 0 ? `"${address.houseNumber || ''}"` : '""',
+						index === 0 ? `"${address.streetAddress || ''}"` : '""',
+						index === 0 ? `"${address.landmark || ''}"` : '""',
+						index === 0 ? `"${address.city || ''}"` : '""',
+						index === 0 ? `"${address.state || ''}"` : '""',
+						index === 0 ? `"${address.pincode || ''}"` : '""'
+					].join(','));
+				});
+			}
+		});
+
+		const csv = csvRows.join('\n');
+
+		// Set headers for CSV download
+		res.setHeader('Content-Type', 'text/csv');
+		res.setHeader('Content-Disposition', `attachment; filename="orders-${Date.now()}.csv"`);
+		
+		res.send(csv);
+	} catch (err) {
+		console.error('Error exporting orders to CSV:', err);
+		return res.status(500).json({ success: false, message: 'Server error exporting orders' });
+	}
+};
