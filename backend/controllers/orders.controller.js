@@ -262,6 +262,137 @@ export const getOrderTracking = async (req, res) => {
 	}
 };
 
+export const getAddressSheet = async (req, res) => {
+	try {
+		const { orderId } = req.params;
+		
+		const order = await Order.findById(orderId)
+			.populate('user', 'name phoneNumber')
+			.lean();
+
+		if (!order) {
+			return res.status(404).json({ success: false, message: "Order not found" });
+		}
+
+		const address = order.address || {};
+		const user = order.user || {};
+
+		// Generate HTML for printable address sheet
+		const html = `
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Address Sheet - Order #${order.publicOrderId}</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+		body {
+			font-family: Arial, sans-serif;
+			padding: 20px;
+		}
+		.address-sheet {
+			width: 400px;
+			border: 2px solid #000;
+			padding: 20px;
+			margin: 0 auto;
+		}
+		.header {
+			text-align: center;
+			border-bottom: 2px solid #000;
+			padding-bottom: 10px;
+			margin-bottom: 15px;
+		}
+		.order-id {
+			font-size: 18px;
+			font-weight: bold;
+			margin-bottom: 5px;
+		}
+		.section {
+			margin-bottom: 15px;
+		}
+		.label {
+			font-weight: bold;
+			font-size: 12px;
+			color: #666;
+			text-transform: uppercase;
+			margin-bottom: 3px;
+		}
+		.value {
+			font-size: 16px;
+			margin-bottom: 8px;
+			line-height: 1.4;
+		}
+		.name {
+			font-size: 20px;
+			font-weight: bold;
+		}
+		.phone {
+			font-size: 18px;
+			font-weight: bold;
+		}
+		.address-line {
+			margin-bottom: 5px;
+		}
+		@media print {
+			body {
+				padding: 0;
+			}
+			.address-sheet {
+				border: 2px solid #000;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="address-sheet">
+		<div class="header">
+			<div class="order-id">Order #${order.publicOrderId || order._id}</div>
+			<div style="font-size: 12px; color: #666;">Date: ${new Date(order.createdAt).toLocaleDateString()}</div>
+		</div>
+		
+		<div class="section">
+			<div class="label">Deliver To:</div>
+			<div class="value name">${address.name || user.name || 'N/A'}</div>
+		</div>
+		
+		<div class="section">
+			<div class="label">Phone:</div>
+			<div class="value phone">${address.phoneNumber || user.phoneNumber || 'N/A'}</div>
+		</div>
+		
+		<div class="section">
+			<div class="label">Address:</div>
+			<div class="value">
+				<div class="address-line">${address.houseNumber || 'N/A'}, ${address.streetAddress || 'N/A'}</div>
+				${address.landmark ? `<div class="address-line">Near: ${address.landmark}</div>` : ''}
+				<div class="address-line">${address.city || 'N/A'}, ${address.state || 'N/A'}</div>
+				<div class="address-line" style="font-weight: bold;">PIN: ${address.pincode || 'N/A'}</div>
+			</div>
+		</div>
+	</div>
+	
+	<script>
+		// Auto-print when page loads
+		window.onload = function() {
+			window.print();
+		};
+	</script>
+</body>
+</html>
+		`;
+
+		res.setHeader('Content-Type', 'text/html');
+		res.send(html);
+	} catch (err) {
+		console.error('Error generating address sheet:', err);
+		return res.status(500).json({ success: false, message: 'Server error generating address sheet' });
+	}
+};
+
 export const exportOrdersCSV = async (req, res) => {
 	try {
 		// Extract filter parameters from query
