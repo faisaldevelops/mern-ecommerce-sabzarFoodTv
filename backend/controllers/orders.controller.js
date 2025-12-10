@@ -1,11 +1,52 @@
 import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
+import mongoose from "mongoose";
 
 export const getOrdersData = async (req, res) => {
 	try {
-		// Find all orders and populate the user and product references.
-		// Select a few useful user fields and product fields to return.
-		const orders = await Order.find()
+		// Extract filter parameters from query
+		const { phoneNumber, publicOrderId, status } = req.query;
+		
+		// Build filter object
+		let filter = {};
+		
+		// Filter by publicOrderId
+		if (publicOrderId) {
+			filter.publicOrderId = publicOrderId;
+		}
+		
+		// Filter by status (trackingStatus)
+		if (status && status !== 'all') {
+			// Validate status is one of the allowed values
+			const allowedStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+			if (!allowedStatuses.includes(status)) {
+				return res.status(400).json({ 
+					success: false, 
+					message: 'Invalid status value' 
+				});
+			}
+			filter.trackingStatus = status;
+		}
+		
+		// Filter by user phone number (not address)
+		if (phoneNumber) {
+			const sanitizedPhone = phoneNumber.replace(/[^0-9+\-\s()]/g, '');
+			if (sanitizedPhone) {
+				// Find user IDs matching phone number
+				const User = mongoose.model('User');
+				const users = await User.find({ phoneNumber: { $regex: sanitizedPhone, $options: 'i' } }, '_id');
+				const userIds = users.map(u => u._id);
+				if (userIds.length > 0) {
+					filter.user = { $in: userIds };
+				} else {
+					// No users match, so no orders will match
+					filter.user = null;
+				}
+			}
+		}
+		
+		// Find all orders with filters and populate the user and product references.
+		const orders = await Order.find(filter)
 			.populate('user', 'name email phoneNumber')
 			.populate({
 				path: 'products.product',
@@ -28,6 +69,7 @@ export const getOrdersData = async (req, res) => {
 
 			return {
 				orderId: order._id,
+				publicOrderId: order.publicOrderId,
 				totalAmount: order.totalAmount ?? null,
 				createdAt: order.createdAt,
 				updatedAt: order.updatedAt,
@@ -65,6 +107,7 @@ export const getUserOrders = async (req, res) => {
 
 		const formatted = orders.map(order => ({
 			orderId: order._id,
+			publicOrderId: order.publicOrderId,
 			totalAmount: order.totalAmount,
 			createdAt: order.createdAt,
 			products: order.products.map(p => ({
@@ -122,6 +165,7 @@ export const updateOrderTracking = async (req, res) => {
 			message: "Order tracking updated successfully",
 			order: {
 				orderId: order._id,
+				publicOrderId: order.publicOrderId,
 				trackingStatus: order.trackingStatus,
 				trackingNumber: order.trackingNumber,
 				estimatedDelivery: order.estimatedDelivery,
@@ -152,6 +196,7 @@ export const getOrderTracking = async (req, res) => {
 			success: true,
 			data: {
 				orderId: order._id,
+				publicOrderId: order.publicOrderId,
 				trackingStatus: order.trackingStatus,
 				trackingNumber: order.trackingNumber,
 				estimatedDelivery: order.estimatedDelivery,
