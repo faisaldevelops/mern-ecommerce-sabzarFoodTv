@@ -1,24 +1,23 @@
 {
-	"name": "e-commerce-store",
+	"name": "e-commerce-backend",
 	"version": "1.0.0",
-	"description": "",
-	"main": "backend/server.js",
+	"description": "Backend for URBAN K E-Commerce Store",
+	"main": "server.js",
+	"type": "module",
 	"scripts": {
-		"dev": "nodemon backend/server.js",
-		"start": "node backend/server.js",
-		"build": "npm install && npm install --prefix frontend && npm run build --prefix frontend",
-		"cleanup:reservations": "node backend/scripts/cleanupStuckReservations.js"
+		"dev": "nodemon server.js",
+		"start": "node server.js",
+		"cleanup:reservations": "node scripts/cleanupStuckReservations.js"
 	},
 	"keywords": [],
 	"author": "",
-	"type": "module",
 	"license": "ISC",
 	"dependencies": {
 		"bcryptjs": "^2.4.3",
 		"body-parser": "^2.2.0",
 		"cloudinary": "^2.4.0",
 		"cookie-parser": "^1.4.6",
-		"crypto": "^1.0.1",
+		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",
 		"express": "^4.19.2",
 		"ioredis": "^5.4.1",

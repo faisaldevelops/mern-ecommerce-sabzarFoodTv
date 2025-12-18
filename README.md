@@ -24,6 +24,8 @@ Features of this App
 
 ### Setup .env file
 
+Create a `.env` file in the `backend` directory with the following variables:
+
 ```bash
 PORT=5000
 MONGO_URI=your_mongo_uri
@@ -44,12 +46,35 @@ NODE_ENV=development
 
 ### Run this app locally
 
+**Backend:**
 ```shell
-npm run build
+cd backend
+npm install
+npm run dev
 ```
 
-### Start the app
-
+**Frontend:**
 ```shell
-npm run start
+cd frontend
+npm install
+npm run dev
 ```
+
+### Production Deployment
+
+**Backend (DigitalOcean App Platform):**
+1. Deploy from the `backend` directory
+2. Set environment variables in the app configuration (see backend/.env.example)
+3. **Important:** Set `CLIENT_URL` to your frontend URL (e.g., `https://your-frontend.ondigitalocean.app`)
+4. Run command: `npm install && npm start`
+
+**Frontend (DigitalOcean Static Site):**
+1. Deploy from the `frontend` directory
+2. **Important:** Set environment variable `VITE_API_URL` to your backend URL (e.g., `https://your-backend.ondigitalocean.app/api`)
+3. Build command: `npm install && npm run build`
+4. Output directory: `dist`
+
+**Note:** After deploying both services:
+- Make sure the backend's `CLIENT_URL` matches your frontend URL
+- Make sure the frontend's `VITE_API_URL` matches your backend URL + `/api`
+- Both services need to be running for the app to work properly
