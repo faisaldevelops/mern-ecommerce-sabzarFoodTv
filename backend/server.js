@@ -1,56 +1,3 @@
-// import dotenv from "dotenv";
-// import express from "express";
-
-// import cookieParser from "cookie-parser";
-// import path from "path";
-
-// import authRoutes from "./routes/auth.route.js";
-// import productRoutes from "./routes/product.route.js";
-// import cartRoutes from "./routes/cart.route.js";
-// import couponRoutes from "./routes/coupon.route.js";
-// import paymentRoutes from "./routes/payment.route.js";
-// import orderRoutes from "./routes/order.route.js"
-// import analyticsRoutes from "./routes/analytics.route.js";
-// // import addressRoutes from "./routes/address.route.js"
-
-// import { connectDB } from "./lib/db.js";
-
-// dotenv.config({ path: "./.env", debug: true }); // debug=true prints helpful info
-
-// console.log(process.env.PORT);
-
-
-// const app = express();
-// const PORT = process.env.PORT || 5000;
-
-// const __dirname = path.resolve();
-
-// app.use(express.json({ limit: "10mb" })); // allows you to parse the body of the request
-// app.use(cookieParser());
-
-// app.use("/api/auth", authRoutes);
-// app.use("/api/products", productRoutes);
-// app.use("/api/cart", cartRoutes);
-// app.use("/api/coupons", couponRoutes);
-// app.use("/api/payments", paymentRoutes);
-// app.use("/api/orders", orderRoutes);
-// app.use("/api/analytics", analyticsRoutes);
-// // app.use("/api/address", addressRoutes);
-
-// if (process.env.NODE_ENV === "production") {
-// 	app.use(express.static(path.join(__dirname, "/frontend/dist")));
-
-// 	app.get("*", (req, res) => {
-// 		res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
-// 	});
-// }
-
-// app.listen(PORT, () => {
-// 	console.log("Server is running on http://localhost:" + PORT);
-// 	connectDB();
-// });
-
-// server.js (modified parts)
 import dotenv from "dotenv";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -69,50 +16,65 @@ import addressRoutes from "./routes/address.route.js";
 import { connectDB } from "./lib/db.js";
 import { startHoldExpiryJob } from "./lib/stockHold.js";
 
-dotenv.config({ path: "./.env", debug: true });
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const CLIENT_URL = process.env.CLIENT_URL;
 const __dirname = path.resolve();
 
-// CORS configuration for separate frontend deployment
-const corsOptions = {
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
-  credentials: true, // Allow cookies to be sent
-};
-app.use(cors(corsOptions));
+/* =======================
+   CORS (MUST BE FIRST)
+======================= */
+app.use(
+  cors({
+    origin: CLIENT_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 
-// RAW parser for webhook route ONLY (before express.json)
+// Allow preflight requests
+app.options("*", cors());
+
+/* =======================
+   Razorpay Webhook
+   (RAW BODY ONLY HERE)
+======================= */
 app.post(
   "/api/payments/razorpay-webhook",
-  express.raw({ type: "application/json" }), // raw body accessible in req.body as a Buffer
+  express.raw({ type: "application/json" }),
   (req, res, next) => {
-    // save raw body on request for controller to use as string
     req.rawBody = req.body;
-    // call the controller; import inside route file will handle logic
-    // We'll delegate actual handling to router below, but express.raw middleware must run first.
     next();
   }
 );
 
-// now use JSON parser for all other routes
+/* =======================
+   Global Middlewares
+======================= */
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// routes
+/* =======================
+   Routes
+======================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/otp", otpRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);
-app.use("/api/payments", paymentRoutes); // contains create/order/verify (and webhook route also exists at same path)
+app.use("/api/payments", paymentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
-app.listen(PORT, () => {
-  console.log("Server is running on http://localhost:" + PORT);
-  connectDB();
-  // Start the hold expiry cleanup job after DB connection
+/* =======================
+   Start Server
+======================= */
+app.listen(PORT, async () => {
+  console.log(`Server running on port ${PORT}`);
+  await connectDB();
   startHoldExpiryJob();
 });
