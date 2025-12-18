@@ -25,13 +25,15 @@ const setCookies = (res, accessToken, refreshToken) => {
 	res.cookie("accessToken", accessToken, {
 		httpOnly: true, // prevent XSS attacks, cross site scripting attack
 		secure: isProd,
-		sameSite: isProd ? "none" : "lax", 
+		sameSite: "lax",
+		domain: ".sabzarfoods.in", 
 		maxAge: 15 * 60 * 1000, // 15 minutes
 	});
 	res.cookie("refreshToken", refreshToken, {
 		httpOnly: true, // prevent XSS attacks, cross site scripting attack
 		secure: isProd,
-		sameSite: isProd ? "none" : "lax", 
+		sameSite: "lax",
+		domain: ".sabzarfoods.in", 
 		path: "/api/auth/refresh-token",
 		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 	});
@@ -102,11 +104,13 @@ export const logout = async (req, res) => {
 		res.clearCookie("accessToken", {
 			httpOnly: true,
 			secure: isProd,
+			domain: isProd ? ".sabzarfoods.in" : undefined,
 			sameSite: isProd ? "none" : "lax"
 		});
 		res.clearCookie("refreshToken", {
 			httpOnly: true,
 			secure: isProd,
+			domain: isProd ? ".sabzarfoods.in" : undefined,
 			sameSite: isProd ? "none" : "lax",
 			path: "/api/auth/refresh-token"
 		});
