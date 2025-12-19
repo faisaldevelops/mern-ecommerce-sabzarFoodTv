@@ -11,14 +11,12 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [step, setStep] = useState("phone"); // "phone" or "otp"
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendLoading, setResendLoading] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [otpError, setOtpError] = useState("");
   const [otpSuccess, setOtpSuccess] = useState("");
-  const [nameError, setNameError] = useState("");
   const { checkAuth } = useUserStore();
   const { fetchAddresses } = useAddressStore();
   const { syncGuestCart } = useCartStore();
@@ -119,7 +117,6 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
       const response = await axios.post("/otp/verify", {
         phoneNumber,
         otp,
-        name: name || "User", // Default name if not provided
       });
       
       setOtpSuccess(response.data.message);
@@ -158,13 +155,11 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
     setStep("phone");
     setPhoneNumber("");
     setOtp("");
-    setName("");
     setLoading(false);
     setResendCooldown(0);
     setPhoneError("");
     setOtpError("");
     setOtpSuccess("");
-    setNameError("");
     onClose();
   };
 
@@ -267,23 +262,6 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
               {otpSuccess && (
                 <p className="mt-1 text-xs text-green-600">{otpSuccess}</p>
               )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
-                Your Name (optional for returning users)
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-                className="w-full rounded-md border border-stone-300 bg-white px-4 py-2.5 text-stone-900 focus:ring-2 focus:ring-stone-800 focus:border-transparent"
-                disabled={loading}
-              />
-              <p className="mt-1 text-xs text-stone-500">
-                Required for new users only
-              </p>
             </div>
 
             <motion.button

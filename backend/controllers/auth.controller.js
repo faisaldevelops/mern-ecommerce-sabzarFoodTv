@@ -7,18 +7,18 @@ const isProd = process.env.NODE_ENV === "production";
 
 const generateTokens = (userId) => {
 	const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
-		expiresIn: "15m",
+		expiresIn: "60d",
 	});
 
 	const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
-		expiresIn: "7d",
+		expiresIn: "60d",
 	});
 
 	return { accessToken, refreshToken };
 };
 
 const storeRefreshToken = async (userId, refreshToken) => {
-	await redis.set(`refresh_token:${userId}`, refreshToken, "EX", 7 * 24 * 60 * 60); // 7days
+	await redis.set(`refresh_token:${userId}`, refreshToken, "EX", 60 * 24 * 60 * 60); // 60 days
 };
 
 const setCookies = (res, accessToken, refreshToken) => {
@@ -27,7 +27,7 @@ const setCookies = (res, accessToken, refreshToken) => {
 		secure: isProd,
 		sameSite: "lax",
 		domain: ".sabzarfoods.in", 
-		maxAge: 15 * 60 * 1000, // 15 minutes
+		maxAge: 60 * 24 * 60 * 60 * 1000, // 60 days
 	});
 	res.cookie("refreshToken", refreshToken, {
 		httpOnly: true, // prevent XSS attacks, cross site scripting attack
@@ -35,7 +35,7 @@ const setCookies = (res, accessToken, refreshToken) => {
 		sameSite: "lax",
 		domain: ".sabzarfoods.in", 
 		path: "/api/auth/refresh-token",
-		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+		maxAge: 60 * 24 * 60 * 60 * 1000, // 60 days
 	});
 };
 
@@ -137,13 +137,13 @@ export const refreshToken = async (req, res) => {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
-		const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+		const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "60d" });
 
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === "production",
 			sameSite: isProd ? "none" : "lax",
-			maxAge: 15 * 60 * 1000,
+			maxAge: 60 * 24 * 60 * 60 * 1000,
 		});
 
 		res.json({ message: "Token refreshed successfully" });
