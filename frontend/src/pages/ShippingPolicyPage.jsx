@@ -1,5 +1,6 @@
 const contactDetails = {
-	whatsapp: "+91-7051896324",
+	whatsappLink: "https://wa.me/917051896324",
+	whatsappLabel: "Chat on WhatsApp",
 	email: "orders@sabzarfoods.in"
 };
 
@@ -69,7 +70,7 @@ const ShippingPolicyPage = () => {
 					<h2 className='text-xl font-semibold'>Contact Us</h2>
 					<ul className='space-y-2 text-sm text-stone-700'>
 						<li><span className='font-medium text-stone-900'>Email:</span> <a className='text-emerald-700 hover:text-emerald-800 underline' href={`mailto:${contactDetails.email}`}>{contactDetails.email}</a></li>
-						<li><span className='font-medium text-stone-900'>Phone/WhatsApp:</span> <a className='text-emerald-700 hover:text-emerald-800 underline' href='https://wa.me/917051896324' rel='noreferrer' target='_blank'>{contactDetails.whatsapp}</a></li>
+						<li><span className='font-medium text-stone-900'>Phone/WhatsApp:</span> <a className='text-emerald-700 hover:text-emerald-800 underline' href={contactDetails.whatsappLink} rel='noreferrer' target='_blank'>{contactDetails.whatsappLabel}</a></li>
 					</ul>
 				</section>
 			</div>

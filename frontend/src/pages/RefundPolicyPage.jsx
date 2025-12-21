@@ -1,5 +1,6 @@
 const contactDetails = {
-	whatsapp: "+91-7051896324",
+	whatsappLink: "https://wa.me/917051896324",
+	whatsappLabel: "Chat on WhatsApp",
 	email: "orders@sabzarfoods.in",
 	postal: "Sabzar Foods, Main Chowk, Kupwara Dist Kupwara, J&K, India. 193222",
 };
@@ -22,7 +23,7 @@ const RefundPolicyPage = () => {
 						<li><span className='font-medium text-stone-900'>Right to cancel:</span> You can cancel within 2 hours of placing the order—no reason required.</li>
 						<li><span className='font-medium text-stone-900'>Cancellation deadline:</span> 2 hours from the order time for the goods.</li>
 						<li>
-							<span className='font-medium text-stone-900'>How to cancel:</span> Share your cancellation request and Order ID via email at <a className='text-emerald-700 hover:text-emerald-800 underline' href={`mailto:${contactDetails.email}`}>{contactDetails.email}</a> or WhatsApp at <a className='text-emerald-700 hover:text-emerald-800 underline' href='https://wa.me/917051896324' rel='noreferrer' target='_blank'>start a chat</a>.
+							<span className='font-medium text-stone-900'>How to cancel:</span> Share your cancellation request and Order ID via email at <a className='text-emerald-700 hover:text-emerald-800 underline' href={`mailto:${contactDetails.email}`}>{contactDetails.email}</a> or WhatsApp at <a className='text-emerald-700 hover:text-emerald-800 underline' href={contactDetails.whatsappLink} rel='noreferrer' target='_blank'>{contactDetails.whatsappLabel}</a>.
 						</li>
 					</ul>
 				</section>
@@ -57,7 +58,7 @@ const RefundPolicyPage = () => {
 				<section className='space-y-4'>
 					<h2 className='text-xl font-semibold'>Contact Us</h2>
 					<ul className='space-y-2 text-sm text-stone-700'>
-						<li><span className='font-medium text-stone-900'>WhatsApp:</span> <a className='text-emerald-700 hover:text-emerald-800 underline' href='https://wa.me/917051896324' rel='noreferrer' target='_blank'>{contactDetails.whatsapp}</a></li>
+						<li><span className='font-medium text-stone-900'>WhatsApp:</span> <a className='text-emerald-700 hover:text-emerald-800 underline' href={contactDetails.whatsappLink} rel='noreferrer' target='_blank'>{contactDetails.whatsappLabel}</a></li>
 						<li><span className='font-medium text-stone-900'>Email:</span> <a className='text-emerald-700 hover:text-emerald-800 underline' href={`mailto:${contactDetails.email}`}>{contactDetails.email}</a></li>
 						<li><span className='font-medium text-stone-900'>Post:</span> {contactDetails.postal}</li>
 					</ul>
