@@ -11,6 +11,7 @@ const CartPage = lazy(() => import("./pages/CartPage"));
 const PurchaseSuccessPage = lazy(() => import("./pages/PurchaseSuccessPage"));
 const PurchaseCancelPage = lazy(() => import("./pages/PurchaseCancelPage"));
 const RefundPolicyPage = lazy(() => import("./pages/RefundPolicyPage"));
+const ShippingPolicyPage = lazy(() => import("./pages/ShippingPolicyPage"));
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -57,6 +58,7 @@ function App() {
 						<Route path='/cart' element={<CartPage />} />
 						<Route path='/order-summary' element={user ? <OrderSummaryPage /> : <Navigate to='/login' />} />
 						<Route path='/my-orders' element={user ? <MyOrdersPage /> : <Navigate to='/login' />} />
+						<Route path='/shipping-policy' element={<ShippingPolicyPage />} />
 						<Route path='/refund-policy' element={<RefundPolicyPage />} />
 						<Route path='/purchase-success' element={<PurchaseSuccessPage />} />
 						<Route path='/purchase-cancel' element={<PurchaseCancelPage />} />
