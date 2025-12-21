@@ -1,6 +1,6 @@
 <h1 align="center">URBAN K E-Commerce Store 🛒</h1>
 
-Features of this App
+Features of this App:
 
 -   🚀 Project Setup
 -   🗄️ MongoDB & Redis Integration
