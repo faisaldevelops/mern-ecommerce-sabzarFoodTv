@@ -64,7 +64,7 @@ const AnalyticsTab = () => {
 					color='from-emerald-500 to-lime-700'
 				/>
 			</div>
-			<Suspense fallback={<div className="text-center py-8" role="status" aria-live="polite">Loading chart...</div>}>
+			<Suspense fallback={<div className="text-center py-8" role="status" aria-live="polite" aria-label="Loading sales chart data">Loading chart...</div>}>
 				<SalesChart dailySalesData={dailySalesData} />
 			</Suspense>
 		</div>

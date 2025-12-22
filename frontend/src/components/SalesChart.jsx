@@ -9,7 +9,7 @@ const SalesChart = ({ dailySalesData }) => {
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.5, delay: 0.25 }}
 		>
-			<ResponsiveContainer width='100%' height={400}>
+			<ResponsiveContainer width='100%' height={400} role="img" aria-label="Sales and revenue chart showing daily performance metrics">
 				<LineChart data={dailySalesData}>
 					<CartesianGrid strokeDasharray='3 3' />
 					<XAxis dataKey='name' stroke='#D1D5DB' />
