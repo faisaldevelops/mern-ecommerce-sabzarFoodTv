@@ -1,3 +1,5 @@
+import React from "react";
+
 const contactDetails = {
 	whatsappLink: "https://wa.me/917051896324",
 	whatsappLabel: "Chat on WhatsApp",

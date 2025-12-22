@@ -1,5 +1,5 @@
+import React, { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle, HandHeart } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCartStore } from "../stores/useCartStore";
 import Confetti from "react-confetti";

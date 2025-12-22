@@ -1,5 +1,5 @@
+import React, { useEffect, useState } from "react";
 import { BarChart, PlusCircle, ShoppingBag, ShoppingBasket } from "lucide-react";
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import AnalyticsTab from "../components/AnalyticsTab";
