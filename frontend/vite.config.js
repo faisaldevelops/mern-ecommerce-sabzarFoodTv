@@ -5,27 +5,20 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
 	plugins: [react()],
 	build: {
-		// Optimize chunk splitting for better caching
-		rollupOptions: {
-			output: {
-				manualChunks: {
-					// Vendor chunk for core React libraries
-					vendor: ['react', 'react-dom', 'react-router-dom', 'zustand'],
-					// Animation libraries (framer-motion is large)
-					animations: ['framer-motion'],
-					// Chart library (only loaded in admin)
-					charts: ['recharts'],
-					// UI utilities
-					ui: ['lucide-react', 'react-hot-toast']
-				}
-			}
-		},
-		// Increase chunk size warning limit (chunks are intentional)
+		// Increase chunk size warning limit
 		chunkSizeWarningLimit: 600,
-		// Use esbuild for minification to avoid optional terser dependency
+		// Use esbuild for minification
 		minify: 'esbuild',
 		esbuild: {
 			drop: ['console', 'debugger']
-		}
+		},
+		// Disable source maps in production
+		sourcemap: false,
+		// Optimize asset inlining threshold
+		assetsInlineLimit: 4096
+	},
+	// Optimize dependencies
+	optimizeDeps: {
+		include: ['react', 'react-dom', 'react-router-dom']
 	}
 });
