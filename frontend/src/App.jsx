@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useTransition } from "react";
 
 // Lazy load all pages
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -20,24 +20,8 @@ const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const Navbar = lazy(() => import("./components/Navbar"));
 const Footer = lazy(() => import("./components/Footer"));
 
-// Lazy load Toaster to defer react-hot-toast loading
-const LazyToaster = lazy(() => 
-	import("react-hot-toast").then(module => ({
-		default: () => (
-			<module.Toaster 
-				toastOptions={{
-					style: {
-						background: '#fff',
-						color: '#1c1917',
-						border: '1px solid #e7e5e4',
-						boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-					},
-				}}
-			/>
-		)
-	}))
-);
-
+// Import Toaster synchronously for immediate error handling support
+import { Toaster } from "react-hot-toast";
 import { useUserStore } from "./stores/useUserStore";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { useCartStore } from "./stores/useCartStore";
@@ -47,21 +31,20 @@ function App() {
 	const { user, checkAuth } = useUserStore();
 	const { initCart } = useCartStore();
 	const { fetchAddresses } = useAddressStore();
+	const [, startTransition] = useTransition();
 	
 	useEffect(() => {
-		// Defer auth check slightly to prioritize initial render
-		const timer = setTimeout(() => {
+		// Use React's startTransition to defer auth check without blocking render
+		startTransition(() => {
 			checkAuth();
-		}, 0);
-		return () => clearTimeout(timer);
+		});
 	}, [checkAuth]);
 
 	useEffect(() => {
-		// Defer cart initialization to prioritize initial render
-		const timer = setTimeout(() => {
+		// Use React's startTransition to defer cart initialization
+		startTransition(() => {
 			initCart();
-		}, 0);
-		return () => clearTimeout(timer);
+		});
 	}, [initCart]);
 
 	useEffect(() => {
@@ -101,9 +84,16 @@ function App() {
 			<Suspense fallback={<div className="h-32" />}>
 				<Footer />
 			</Suspense>
-			<Suspense fallback={null}>
-				<LazyToaster />
-			</Suspense>
+			<Toaster 
+				toastOptions={{
+					style: {
+						background: '#fff',
+						color: '#1c1917',
+						border: '1px solid #e7e5e4',
+						boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+					},
+				}}
+			/>
 		</div>
 	);
 }
