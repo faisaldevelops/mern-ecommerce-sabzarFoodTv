@@ -16,8 +16,8 @@ export default defineConfig({
 		sourcemap: false,
 		// Optimize asset inlining threshold (4KB is good balance)
 		assetsInlineLimit: 4096,
-		// Target modern browsers for smaller output
-		target: 'es2015',
+		// Target modern browsers for smaller output (es2020 provides good balance)
+		target: 'es2020',
 		// Manual chunk splitting for better caching and parallel loading
 		rollupOptions: {
 			output: {
@@ -67,8 +67,6 @@ export default defineConfig({
 			'react-router-dom',
 			'zustand',
 			'axios'
-		],
-		// Force optimize these deps
-		force: true
+		]
 	}
 });
