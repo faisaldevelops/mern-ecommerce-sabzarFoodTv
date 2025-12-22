@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 
+// Lazy load all pages
 const HomePage = lazy(() => import("./pages/HomePage"));
 const SignUpPage = lazy(() => import("./pages/SignUpPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -15,9 +16,28 @@ const ShippingPolicyPage = lazy(() => import("./pages/ShippingPolicyPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import { Toaster } from "react-hot-toast";
+// Lazy load heavy components (contain framer-motion, lucide-react, etc.)
+const Navbar = lazy(() => import("./components/Navbar"));
+const Footer = lazy(() => import("./components/Footer"));
+
+// Lazy load Toaster to defer react-hot-toast loading
+const LazyToaster = lazy(() => 
+	import("react-hot-toast").then(module => ({
+		default: () => (
+			<module.Toaster 
+				toastOptions={{
+					style: {
+						background: '#fff',
+						color: '#1c1917',
+						border: '1px solid #e7e5e4',
+						boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+					},
+				}}
+			/>
+		)
+	}))
+);
+
 import { useUserStore } from "./stores/useUserStore";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { useCartStore } from "./stores/useCartStore";
@@ -29,13 +49,19 @@ function App() {
 	const { fetchAddresses } = useAddressStore();
 	
 	useEffect(() => {
-		// Fire off auth check in background, don't block render
-		checkAuth();
+		// Defer auth check slightly to prioritize initial render
+		const timer = setTimeout(() => {
+			checkAuth();
+		}, 0);
+		return () => clearTimeout(timer);
 	}, [checkAuth]);
 
 	useEffect(() => {
-		// Initialize cart in background, don't block render
-		initCart();
+		// Defer cart initialization to prioritize initial render
+		const timer = setTimeout(() => {
+			initCart();
+		}, 0);
+		return () => clearTimeout(timer);
 	}, [initCart]);
 
 	useEffect(() => {
@@ -48,7 +74,9 @@ function App() {
 	return (
 		<div className='min-h-screen bg-stone-50 text-stone-900 relative overflow-hidden flex flex-col'>
 			<div className='relative z-50 pt-16 flex-1'>
-				<Navbar />
+				<Suspense fallback={<div className="h-16" />}>
+					<Navbar />
+				</Suspense>
 				<Suspense fallback={<LoadingSpinner />}>
 					<Routes>
 						<Route path='/' element={<HomePage />} />
@@ -70,17 +98,12 @@ function App() {
 					</Routes>
 				</Suspense>
 			</div>
-			<Footer />
-			<Toaster 
-				toastOptions={{
-					style: {
-						background: '#fff',
-						color: '#1c1917',
-						border: '1px solid #e7e5e4',
-						boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-					},
-				}}
-			/>
+			<Suspense fallback={<div className="h-32" />}>
+				<Footer />
+			</Suspense>
+			<Suspense fallback={null}>
+				<LazyToaster />
+			</Suspense>
 		</div>
 	);
 }
