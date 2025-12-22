@@ -1,15 +1,29 @@
-# Performance Optimization: Profile Endpoint Caching
+# Performance Optimization: Bundle Optimization & Lazy Loading
 
 ## Problem
-The `/api/auth/profile` endpoint (and other initialization APIs) were being called on every page load, causing:
-- Unnecessary network requests
-- Slow initial page renders
-- Blocking UI until all requests completed
+The application had performance issues with initial load times:
+1. Large bundle sizes due to heavy dependencies like recharts (368 kB) and framer-motion (114 kB)
+2. All libraries loaded on initial page load, even if not immediately needed
+3. AdminPage bundle was 399.50 kB (mainly due to recharts)
+4. Main bundle was 345.72 kB
 
-## Solution
-Implemented comprehensive caching and request deduplication across all three stores:
+## Solutions Implemented
 
-### 1. **useUserStore.js** - User Authentication Caching
+### 1. **Bundle Optimization** - Code Splitting & Lazy Loading
+- **Lazy loading recharts**: Split heavy charting library (368 kB) into separate chunk
+  - Created `SalesChart.jsx` component with dynamic import
+  - Only loads when Analytics tab is accessed in AdminPage
+- **Manual chunk splitting in vite.config.js**:
+  - `react-vendor`: React core libraries (162 kB)
+  - `framer-motion`: Animation library (114 kB)
+  - `recharts`: Charting library (368 kB, lazy loaded)
+  - `ui-vendor`: UI libraries (46 kB)
+- **Results**:
+  - AdminPage: 399.50 kB → 26.50 kB (93% reduction)
+  - Main bundle: 345.72 kB → 56.76 kB (84% reduction)
+  - Total initial load reduced by ~366 kB (49% reduction)
+
+### 2. **useUserStore.js** - User Authentication Caching
 - **Added localStorage caching** with `user_cache` key
 - **Skip redundant API calls**: If user is cached, return immediately without API call
 - **Request deduplication**: Prevent multiple simultaneous `/auth/profile` calls
@@ -19,17 +33,18 @@ Implemented comprehensive caching and request deduplication across all three sto
   - Update `checkAuth()` to skip API if user is cached
   - Cache user data in `signup()`, `login()`, and clear cache in `logout()`
 
-### 2. **useCartStore.js** - Cart Caching
+### 3. **useCartStore.js** - Cart Caching
 - **Added localStorage caching** with `cart_cache` key
 - **Added `initCart()` method** for non-blocking initialization
 - **Request deduplication**: Prevent multiple simultaneous cart fetches
+- **Fixed bug**: Removed duplicate `initCart` method that existed in two places
 - **Changes**:
   - Initialize `cart` state with `getCachedCart()`
   - New `initCart()` method called from App.jsx
   - Cache cart after every mutation (add, remove, update)
   - Guest cart still uses `guest_cart` for localStorage fallback
 
-### 3. **useAddressStore.js** - Address Caching
+### 4. **useAddressStore.js** - Address Caching
 - **Added localStorage caching** with `address_cache` key
 - **Request deduplication**: Prevent multiple simultaneous address fetches
 - **Changes**:
@@ -37,7 +52,7 @@ Implemented comprehensive caching and request deduplication across all three sto
   - Update `fetchAddresses()` to use request deduplication promise
   - Cache addresses after fetch and every mutation (create, update, delete)
 
-### 4. **App.jsx** - Non-Blocking Initialization
+### 5. **App.jsx** - Non-Blocking Initialization
 - **Removed blocking LoadingSpinner**: Content renders immediately
 - **Background initialization**: All three stores initialize in the background
 - **Changes**:
@@ -49,13 +64,16 @@ Implemented comprehensive caching and request deduplication across all three sto
 
 ### Repeat Visitors (Cached)
 - **Before**: 3 API calls on load (profile + cart + addresses)
-- **After**: 0 API calls (all data from localStorage)
-- **Speed**: Page renders instantly
+- **After**: 0 API calls if all data is cached
+- **Speed**: Page renders instantly with cached data
 
-### First-Time Visitors
-- **Before**: 3 blocking API calls, page frozen until all complete
-- **After**: Content renders while 3 requests load in background
-- **Speed**: Perceived load time dramatically reduced
+### First-Time Visitors & Initial Load
+- **Before**: Large bundle (745 kB+), blocking API calls, slow Time to Interactive
+- **After**: Smaller initial bundle (379 kB), better code splitting, faster TTI
+- **Speed**: 
+  - 49% reduction in initial bundle size
+  - 45% reduction in gzipped size (224 kB → 124 kB)
+  - recharts (368 kB) only loads when needed
 
 ### Request Deduplication
 - Prevents duplicate requests if multiple components mount simultaneously
@@ -74,10 +92,17 @@ Caches are refreshed when:
 - Addresses are created/updated/deleted (updated addresses cached)
 
 ## LocalStorage Keys Used
-- `user_cache`: Authenticated user profile data
-- `cart_cache`: User's shopping cart items
-- `address_cache`: User's saved addresses
+- `user_cache`: Authenticated user profile data (no expiration)
+- `cart_cache`: User's shopping cart items (no expiration)
+- `address_cache`: User's saved addresses (no expiration)
 - `guest_cart`: Guest checkout cart (existing, kept for backward compatibility)
+
+## Bundle Chunks Created
+- `react-vendor.js`: React, ReactDOM, React Router (162 kB)
+- `framer-motion.js`: Animation library (114 kB)
+- `recharts.js`: Chart library, lazy loaded (369 kB)
+- `ui-vendor.js`: lucide-react, react-hot-toast, react-confetti (46 kB)
+- `index.js`: Main application code (57 kB)
 
 ## Testing Checklist
 - [ ] First login: Cache is saved
@@ -87,3 +112,5 @@ Caches are refreshed when:
 - [ ] Create address: Cache updates
 - [ ] Edit address: Cache updates
 - [ ] Delete address: Cache updates
+- [ ] Admin Analytics tab: recharts loads only when tab is opened
+- [ ] Initial page load is noticeably faster
