@@ -52,22 +52,6 @@ The application had performance issues with initial load times:
   - Update `fetchAddresses()` to use request deduplication promise
   - Cache addresses after fetch and every mutation (create, update, delete)
 
-### 4. **useAddressStore.js** - Address Caching
-- **Added localStorage caching** with `address_cache` key
-- **Request deduplication**: Prevent multiple simultaneous address fetches
-- **Changes**:
-  - Initialize `address` state with `getCachedAddresses()`
-  - Update `fetchAddresses()` to use request deduplication promise
-  - Cache addresses after fetch and every mutation (create, update, delete)
-
-### 5. **App.jsx** - Non-Blocking Initialization
-- **Removed blocking LoadingSpinner**: Content renders immediately
-- **Background initialization**: All three stores initialize in the background
-- **Changes**:
-  - Remove `checkingAuth` from useUserStore destructuring
-  - Remove the `if (checkingAuth) return <LoadingSpinner />;` guard
-  - Keep the three useEffect hooks for initializing stores
-
 ### 5. **App.jsx** - Non-Blocking Initialization
 - **Removed blocking LoadingSpinner**: Content renders immediately
 - **Background initialization**: All three stores initialize in the background
