@@ -4,61 +4,43 @@ import react from "@vitejs/plugin-react";
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [react()],
+
 	build: {
-		// Increase chunk size warning limit
-		chunkSizeWarningLimit: 600,
-		// Use esbuild for minification (default)
-		minify: 'esbuild',
-		// Disable source maps in production to reduce bundle size
+		// Modern browsers, good balance of size + compatibility
+		target: "es2020",
+
+		// Fast, safe minification
+		minify: "esbuild",
+
+		// No source maps in prod
 		sourcemap: false,
-		// Optimize asset inlining threshold (4KB is good balance)
-		assetsInlineLimit: 4096,
-		// Target modern browsers for smaller output (es2020 provides good balance)
-		target: 'es2020',
-		// Manual chunk splitting for better caching and parallel loading
+
+		// Prevent noisy warnings without forcing risky splits
+		chunkSizeWarningLimit: 600,
+
+		// Let Rollup handle dependency graph safely
 		rollupOptions: {
 			output: {
-				manualChunks: (id) => {
-					// Split node_modules into separate chunks
-					if (id.includes('node_modules')) {
-						// DO NOT manually chunk react / react-dom
-						// Let Rollup handle it safely to avoid breaking React internals
-						
-						// Large animation library - lazy loaded
-						if (id.includes('framer-motion')) {
-							return 'framer-motion';
-						}
-						// Large chart library - only used on admin page
-						if (id.includes('recharts')) {
-							return 'recharts';
-						}
-						// UI libraries
-						if (id.includes('lucide-react') || id.includes('react-hot-toast') || id.includes('react-confetti')) {
-							return 'ui-vendor';
-						}
-						// State management and HTTP
-						if (id.includes('zustand') || id.includes('axios')) {
-							return 'core-utils';
-						}
-						// Other node_modules go into a separate chunk
-						return 'vendor';
-					}
-				},
-				// Optimize chunk file names for better caching
-				chunkFileNames: 'assets/[name]-[hash].js',
-				entryFileNames: 'assets/[name]-[hash].js',
-				assetFileNames: 'assets/[name]-[hash].[ext]'
+				chunkFileNames: "assets/[name]-[hash].js",
+				entryFileNames: "assets/[name]-[hash].js",
+				assetFileNames: "assets/[name]-[hash].[ext]",
+
+				// OPTIONAL: split ONLY clearly isolated heavy libs
+				manualChunks(id) {
+					if (!id.includes("node_modules")) return;
+
+					// Heavy libs that are NOT needed on first paint
+					if (id.includes("recharts")) return "charts";
+					if (id.includes("framer-motion")) return "animations";
+
+					// Everything else is auto-vendor'd safely
+				}
 			}
 		}
 	},
-	// Optimize dependencies for faster cold starts
+
+	// Speed up dev server only (does NOT affect prod bundle)
 	optimizeDeps: {
-		include: [
-			'react', 
-			'react-dom', 
-			'react-router-dom',
-			'zustand',
-			'axios'
-		]
+		include: ["react", "react-dom", "react-router-dom"]
 	}
 });
