@@ -10,7 +10,6 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@stripe/stripe-js": "^4.3.0",
 		"axios": "^1.7.5",
 		"framer-motion": "^11.3.30",
 		"lucide-react": "^0.435.0",

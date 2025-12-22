@@ -35,9 +35,8 @@ const orderSchema = new mongoose.Schema(
     totalAmount: { type: Number, required: true, min: 0 },
     publicOrderId: { type: String, unique: true, required: true },
     address: { type: addressSchema, required: true },
-    stripeSessionId: { type: String }, // keep field but do not make plain unique here
-    razorpayOrderId: { type: String },    // new field for Razorpay
-    razorpayPaymentId: { type: String },  // new field for Razorpay payment id
+    razorpayOrderId: { type: String },    // Razorpay order id
+    razorpayPaymentId: { type: String },  // Razorpay payment id
     status: { type: String, enum: ["pending", "hold", "paid", "cancelled", "expired"], default: "pending" },
     expiresAt: { type: Date, default: null }, // Hold expiration time (e.g., 15 minutes from creation)
     couponCode: { type: String, default: null },
@@ -77,15 +76,9 @@ const orderSchema = new mongoose.Schema(
 
 /**
  * Indexes:
- * - Make stripeSessionId unique only when present (partial index).
  * - Make razorpayOrderId and razorpayPaymentId unique only when present.
  * Partial indexes avoid the "multiple null" problem.
  */
-orderSchema.index(
-  { stripeSessionId: 1 },
-  { unique: true, partialFilterExpression: { stripeSessionId: { $exists: true, $type: "string" } } }
-);
-
 orderSchema.index(
   { razorpayOrderId: 1 },
   { unique: true, partialFilterExpression: { razorpayOrderId: { $exists: true, $type: "string" } } }

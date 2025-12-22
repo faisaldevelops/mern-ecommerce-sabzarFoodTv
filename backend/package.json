@@ -24,7 +24,6 @@
 		"jsonwebtoken": "^9.0.2",
 		"mongoose": "^8.5.3",
 		"razorpay": "^2.9.6",
-		"stripe": "^16.8.0",
 		"twilio": "^5.10.6"
 	},
 	"devDependencies": {

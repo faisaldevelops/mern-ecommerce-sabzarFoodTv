@@ -40,10 +40,6 @@ export default defineConfig({
 						if (id.includes('lucide-react') || id.includes('react-hot-toast') || id.includes('react-confetti')) {
 							return 'ui-vendor';
 						}
-						// Stripe - only loaded on checkout
-						if (id.includes('@stripe')) {
-							return 'stripe';
-						}
 						// State management and HTTP
 						if (id.includes('zustand') || id.includes('axios')) {
 							return 'core-utils';

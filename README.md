@@ -4,14 +4,14 @@ Features of this App:
 
 -   🚀 Project Setup
 -   🗄️ MongoDB & Redis Integration
--   💳 Stripe Payment Setup
+-   💳 Razorpay Payment Integration
 -   🔐 Robust Authentication System
 -   🔑 JWT with Refresh/Access Tokens
 -   📝 User Signup & Login
 -   🛒 E-Commerce Core
 -   📦 Product & Category Management
 -   🛍️ Shopping Cart Functionality
--   💰 Checkout with Stripe
+-   💰 Secure Checkout Process
 -   🏷️ Coupon Code System
 -   👑 Admin Dashboard
 -   📊 Sales Analytics
@@ -39,7 +39,9 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
-STRIPE_SECRET_KEY=your_stripe_secret_key
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+
 CLIENT_URL=http://localhost:5173
 NODE_ENV=development
 ```
