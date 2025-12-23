@@ -15,7 +15,6 @@ const MyOrdersPage = () => {
 				const response = await axios.get("/orders/my-orders");
 				setOrders(response.data.data || []);
 			} catch (error) {
-				console.error("Error fetching orders:", error);
 				toast.error(error.response?.data?.message || "Failed to fetch orders");
 			} finally {
 				setIsLoading(false);

@@ -1,44 +1,34 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-
-import HomePage from "./pages/HomePage";
-import SignUpPage from "./pages/SignUpPage";
-import LoginPage from "./pages/LoginPage";
-import AdminPage from "./pages/AdminPage";
-import MyOrdersPage from "./pages/MyOrdersPage";
-import OrderSummaryPage from "./pages/OrderSummaryPage";
+import { Toaster } from "react-hot-toast";
+import { useUserStore } from "./stores/useUserStore";
+import { lazy, Suspense, useEffect } from "react";
+import { useCartStore } from "./stores/useCartStore";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { Toaster } from "react-hot-toast";
-import { useUserStore } from "./stores/useUserStore";
-import { useEffect } from "react";
 import LoadingSpinner from "./components/LoadingSpinner";
-import CartPage from "./pages/CartPage";
-import { useCartStore } from "./stores/useCartStore";
-import { useAddressStore } from "./stores/useAddressStore";
-import PurchaseSuccessPage from "./pages/PurchaseSuccessPage";
-import PurchaseCancelPage from "./pages/PurchaseCancelPage";
+
+const HomePage = lazy(() => import("./pages/HomePage"));
+const SignUpPage = lazy(() => import("./pages/SignUpPage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const MyOrdersPage = lazy(() => import("./pages/MyOrdersPage"));
+const OrderSummaryPage = lazy(() => import("./pages/OrderSummaryPage"));
+const CartPage = lazy(() => import("./pages/CartPage"));
+const PurchaseSuccessPage = lazy(() => import("./pages/PurchaseSuccessPage"));
+const PurchaseCancelPage = lazy(() => import("./pages/PurchaseCancelPage"));
 
 function App() {
 	const { user, checkAuth, checkingAuth } = useUserStore();
 	const { initCart } = useCartStore();
-	const { fetchAddresses } = useAddressStore();
 	
 	useEffect(() => {
 		checkAuth();
 	}, [checkAuth]);
 
 	useEffect(() => {
-		// Initialize cart from localStorage on app load
 		initCart();
 	}, [initCart]);
-
-	useEffect(() => {
-		// Fetch addresses when user is logged in
-		if (user) {
-			fetchAddresses();
-		}
-	}, [user, fetchAddresses]);
 
 	if (checkingAuth) return <LoadingSpinner />;
 
@@ -46,20 +36,22 @@ function App() {
 		<div className='min-h-screen bg-stone-50 text-stone-900 relative overflow-hidden flex flex-col'>
 			<div className='relative z-50 pt-16 flex-1'>
 				<Navbar />
-				<Routes>
-					<Route path='/' element={<HomePage />} />
-					<Route path='/signup' element={!user ? <SignUpPage /> : <Navigate to='/' />} />
-					<Route path='/login' element={!user ? <LoginPage /> : <Navigate to='/' />} />
-					<Route
-						path='/secret-dashboard'
-						element={user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' />}
-					/>
-					<Route path='/cart' element={<CartPage />} />
-					<Route path='/order-summary' element={user ? <OrderSummaryPage /> : <Navigate to='/login' />} />
-					<Route path='/my-orders' element={user ? <MyOrdersPage /> : <Navigate to='/login' />} />
-					<Route path='/purchase-success' element={<PurchaseSuccessPage />} />
-					<Route path='/purchase-cancel' element={<PurchaseCancelPage />} />
-				</Routes>
+				<Suspense fallback={<LoadingSpinner />}>
+					<Routes>
+						<Route path='/' element={<HomePage />} />
+						<Route path='/signup' element={!user ? <SignUpPage /> : <Navigate to='/' />} />
+						<Route path='/login' element={!user ? <LoginPage /> : <Navigate to='/' />} />
+						<Route
+							path='/secret-dashboard'
+							element={user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' />}
+						/>
+						<Route path='/cart' element={<CartPage />} />
+						<Route path='/order-summary' element={user ? <OrderSummaryPage /> : <Navigate to='/login' />} />
+						<Route path='/my-orders' element={user ? <MyOrdersPage /> : <Navigate to='/login' />} />
+						<Route path='/purchase-success' element={<PurchaseSuccessPage />} />
+						<Route path='/purchase-cancel' element={<PurchaseCancelPage />} />
+					</Routes>
+				</Suspense>
 			</div>
 			<Footer />
 			<Toaster 

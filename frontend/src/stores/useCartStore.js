@@ -12,10 +12,8 @@ const getLocalCart = () => {
 		if (!cart) return [];
 		
 		const parsed = JSON.parse(cart);
-		// Validate that parsed data is an array
 		if (!Array.isArray(parsed)) return [];
 		
-		// Validate each item has required properties
 		const validated = parsed.filter(item => 
 			item && 
 			typeof item === 'object' && 
@@ -26,7 +24,6 @@ const getLocalCart = () => {
 		
 		return validated;
 	} catch (error) {
-		console.error("Error reading cart from localStorage:", error);
 		return [];
 	}
 };
@@ -35,7 +32,7 @@ const setLocalCart = (cart) => {
 	try {
 		localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
 	} catch (error) {
-		console.error("Error saving cart to localStorage:", error);
+		// Silent fail
 	}
 };
 
@@ -43,7 +40,7 @@ const clearLocalCart = () => {
 	try {
 		localStorage.removeItem(CART_STORAGE_KEY);
 	} catch (error) {
-		console.error("Error clearing cart from localStorage:", error);
+		// Silent fail
 	}
 };
 
@@ -173,34 +170,26 @@ export const useCartStore = create((set, get) => ({
 		set({ subtotal, total });
 	},
 	
-	// Sync guest cart to database after login
 	syncGuestCart: async () => {
 		try {
 			const guestCart = getLocalCart();
 			
-			// If no guest cart items, just fetch server cart
 			if (guestCart.length === 0) {
 				await get().getCartItems();
 				return;
 			}
 
-			// Send guest cart to backend for merging
 			const response = await axios.post("/cart/sync", { guestCart });
 			
-			// Clear local cart after successful sync
 			clearLocalCart();
 			
-			// Update state with merged cart from server
 			set({ cart: response.data });
 			get().calculateTotals();
 		} catch (error) {
-			console.error("Error syncing cart:", error);
-			// If sync fails, just fetch server cart
 			await get().getCartItems();
 		}
 	},
 	
-	// Initialize cart on app load
 	initCart: () => {
 		const localCart = getLocalCart();
 		if (localCart.length > 0) {

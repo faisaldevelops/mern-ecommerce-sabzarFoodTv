@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import compression from "compression";
 import path from "path";
 
 import authRoutes from "./routes/auth.route.js";
@@ -35,8 +36,12 @@ app.use(
   })
 );
 
-// Allow preflight requests
 app.options("*", cors());
+
+/* =======================
+   Compression Middleware
+======================= */
+app.use(compression());
 
 /* =======================
    Razorpay Webhook
@@ -74,7 +79,6 @@ app.use("/api/analytics", analyticsRoutes);
    Start Server
 ======================= */
 app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
   await connectDB();
   startHoldExpiryJob();
 });

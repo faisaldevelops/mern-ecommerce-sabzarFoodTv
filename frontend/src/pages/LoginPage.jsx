@@ -124,17 +124,14 @@ const LoginPage = () => {
 			// Set user directly from response (cookies are set by backend)
 			useUserStore.setState({ user: response.data.user });
 			
-			// Also verify auth state as backup
 			try {
 				await checkAuth();
 			} catch (authError) {
-				console.log("Auth check failed, but user is set from OTP response:", authError);
+				// Auth check failed
 			}
 			
-			// Sync guest cart to database after successful login
 			await syncGuestCart();
 			
-			// Navigate to home page after successful login
 			setTimeout(() => {
 				navigate("/");
 			}, 500);

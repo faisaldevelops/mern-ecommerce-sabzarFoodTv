@@ -6,10 +6,9 @@ import { notifyWaitlist } from "./waitlist.controller.js";
 
 export const getAllProducts = async (req, res) => {
 	try {
-		const products = await Product.find({}); // find all products
+		const products = await Product.find({});
 		res.json({ products });
 	} catch (error) {
-		console.log("Error in getAllProducts controller", error.message);
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 };
@@ -34,7 +33,6 @@ export const createProduct = async (req, res) => {
 
 		res.status(201).json(product);
 	} catch (error) {
-		console.log("Error in createProduct controller", error.message);
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 };
@@ -52,9 +50,8 @@ export const deleteProduct = async (req, res) => {
 			if (publicId) {
 				try {
 					await cloudinary.uploader.destroy(publicId);
-					console.log("deleted image from cloudinary");
 				} catch (error) {
-					console.log("error deleting image from cloudinary", error);
+					// Failed to delete image
 				}
 			}
 		}
@@ -63,7 +60,6 @@ export const deleteProduct = async (req, res) => {
 
 		res.json({ message: "Product deleted successfully" });
 	} catch (error) {
-		console.log("Error in deleteProduct controller", error.message);
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 };
@@ -90,7 +86,6 @@ export const getRecommendedProducts = async (req, res) => {
 
 		res.json(products);
 	} catch (error) {
-		console.log("Error in getRecommendedProducts controller", error.message);
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 };
@@ -112,20 +107,16 @@ export const updateProductStock = async (req, res) => {
 
 		const updatedProduct = await product.save();
 		
-		// Check if product is now back in stock
 		const isNowInStock = (updatedProduct.stockQuantity || 0) - (updatedProduct.reservedQuantity || 0) > 0;
 		
-		// If product was out of stock and is now in stock, notify waitlist
 		if (wasOutOfStock && isNowInStock) {
-			console.log(`Product ${updatedProduct.name} is back in stock, notifying waitlist...`);
 			notifyWaitlist(updatedProduct._id.toString()).catch(err => {
-				console.error("Error notifying waitlist:", err);
+				// Silent fail
 			});
 		}
 		
 		res.json(updatedProduct);
 	} catch (error) {
-		console.log("Error in updateProductStock controller", error.message);
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 };
@@ -136,9 +127,8 @@ const updateStock = (stockQuantity, product) => {
 	const isNowInStock = (product.stockQuantity || 0) - (product.reservedQuantity || 0) > 0;
 
 	if (wasOutOfStock && isNowInStock) {
-		console.log(`Product ${product.name} is back in stock, notifying waitlist...`);
 		notifyWaitlist(product._id.toString()).catch(err => {
-			console.error("Error notifying waitlist:", err);
+			// Silent fail
 		});
 	}
 }
@@ -152,28 +142,23 @@ export const updateProduct = async (req, res) => {
 			return res.status(404).json({ message: "Product not found" });
 		}
 
-		// If there's a new image, upload it to Cloudinary
 		let cloudinaryResponse = null;
-		// Check if image is base64 (new upload) by checking if it starts with data:image
 		const isNewImage = image && image.startsWith('data:image');
 		
 		if (isNewImage) {
-			// Delete old image from Cloudinary if it exists
 			if (product.image) {
 				const publicId = extractCloudinaryPublicId(product.image);
 				if (publicId) {
 					try {
 						await cloudinary.uploader.destroy(publicId);
 					} catch (error) {
-						console.log("error deleting old image from cloudinary", error);
-						// Continue with upload even if delete fails
+						// Failed to delete old image
 					}
 				}
 			}
 			cloudinaryResponse = await cloudinary.uploader.upload(image, { folder: "products" });
 		}
 
-		// Update product fields
 		if (name !== undefined) product.name = name;
 		if (description !== undefined) product.description = description;
 		if (price !== undefined) product.price = price;
@@ -183,7 +168,6 @@ export const updateProduct = async (req, res) => {
 		const updatedProduct = await product.save();
 		res.json(updatedProduct);
 	} catch (error) {
-		console.log("Error in updateProduct controller", error.message);
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 };
