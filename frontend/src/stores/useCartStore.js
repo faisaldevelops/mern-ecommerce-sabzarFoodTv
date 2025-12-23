@@ -32,7 +32,7 @@ const setLocalCart = (cart) => {
 	try {
 		localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
 	} catch (error) {
-		// Silent fail
+		// LocalStorage quota exceeded or disabled - silent fail acceptable for cart feature
 	}
 };
 
@@ -40,7 +40,7 @@ const clearLocalCart = () => {
 	try {
 		localStorage.removeItem(CART_STORAGE_KEY);
 	} catch (error) {
-		// Silent fail
+		// LocalStorage error - silent fail acceptable
 	}
 };
 
