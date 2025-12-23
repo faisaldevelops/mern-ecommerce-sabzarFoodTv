@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "../lib/axios";
 import toast from "react-hot-toast";
 import { useUserStore } from "../stores/useUserStore";
@@ -16,8 +16,9 @@ const LoginPage = () => {
 	const [phoneError, setPhoneError] = useState("");
 	const [otpError, setOtpError] = useState("");
 	const [otpSuccess, setOtpSuccess] = useState("");
-	const { checkAuth } = useUserStore();
+	const { checkAuth, user } = useUserStore();
 	const { syncGuestCart } = useCartStore();
+	const navigate = useNavigate();
 
 	const handleSendOTP = async (e) => {
 		e.preventDefault();
@@ -118,12 +119,25 @@ const LoginPage = () => {
 			});
 			
 			setOtpSuccess(response.data.message);
+			toast.success(response.data.message);
 			
-			// Refresh auth state
-			await checkAuth();
+			// Set user directly from response (cookies are set by backend)
+			useUserStore.setState({ user: response.data.user });
+			
+			// Also verify auth state as backup
+			try {
+				await checkAuth();
+			} catch (authError) {
+				console.log("Auth check failed, but user is set from OTP response:", authError);
+			}
 			
 			// Sync guest cart to database after successful login
 			await syncGuestCart();
+			
+			// Navigate to home page after successful login
+			setTimeout(() => {
+				navigate("/");
+			}, 500);
 		} catch (error) {
 			const errorData = error.response?.data;
 			if (errorData?.reason === "frozen") {

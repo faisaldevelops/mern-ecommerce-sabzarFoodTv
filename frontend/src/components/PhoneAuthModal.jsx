@@ -121,8 +121,15 @@ const PhoneAuthModal = ({ isOpen, onClose, onSuccess }) => {
       
       setOtpSuccess(response.data.message);
       
-      // Refresh auth state
-      await checkAuth();
+      // Set user directly from response (cookies are set by backend)
+      useUserStore.setState({ user: response.data.user });
+      
+      // Also verify auth state as backup
+      try {
+        await checkAuth();
+      } catch (authError) {
+        console.log("Auth check failed, but user is set from OTP response:", authError);
+      }
       
       // Sync guest cart to database after successful authentication
       await syncGuestCart();
