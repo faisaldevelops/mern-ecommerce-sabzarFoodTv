@@ -37,7 +37,6 @@ export const extractCloudinaryPublicId = (cloudinaryUrl, folder = 'products') =>
 
 		return null;
 	} catch (error) {
-		console.error('Error extracting Cloudinary public_id:', error);
 		return null;
 	}
 };

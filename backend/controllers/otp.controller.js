@@ -162,16 +162,13 @@ const sendOTPMessage = async (phoneNumber, otp) => {
         from: twilioPhoneNumber,
         to: `+91${phoneNumber}`, // Assuming Indian phone numbers
       });
-      console.log(`OTP sent to ${phoneNumber} via Twilio`);
       return true;
     } catch (twilioError) {
-      console.error("Twilio error:", twilioError);
       // Continue anyway for development/testing
       return false;
     }
   } else {
     // For development/testing without Twilio
-    // console.log(`OTP for ${phoneNumber}: ${otp} (Development mode - not sent via SMS)`);
     return true;
   }
 };
@@ -250,7 +247,6 @@ export const sendOTP = async (req, res) => {
       userExists: !!userExists,
     });
   } catch (error) {
-    console.error("Error sending OTP:", error);
     res.status(500).json({ message: "Failed to send OTP", error: error.message });
   }
 };
@@ -353,7 +349,6 @@ export const verifyOTP = async (req, res) => {
       isNewUser,
     });
   } catch (error) {
-    console.error("Error verifying OTP:", error);
     res.status(500).json({ message: "Failed to verify OTP", error: error.message });
   }
 };
@@ -407,7 +402,6 @@ export const resendOTP = async (req, res) => {
       message: "OTP resent successfully",
     });
   } catch (error) {
-    console.error("Error resending OTP:", error);
     res.status(500).json({ message: "Failed to resend OTP", error: error.message });
   }
 };

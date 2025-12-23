@@ -80,7 +80,6 @@ export const addToWaitlist = async (req, res) => {
 			alreadySubscribed: false
 		});
 	} catch (error) {
-		console.error("Error adding to waitlist:", error);
 		return res.status(500).json({
 			success: false,
 			message: "Failed to add to waitlist"
@@ -140,7 +139,6 @@ export const getWaitlist = async (req, res) => {
 			count: waitlist.length
 		});
 	} catch (error) {
-		console.error("Error fetching waitlist:", error);
 		return res.status(500).json({
 			success: false,
 			message: "Failed to fetch waitlist"
@@ -160,13 +158,11 @@ export const notifyWaitlist = async (productId) => {
 		const waitlistData = await redis.hgetall(waitlistKey);
 		
 		if (!waitlistData || Object.keys(waitlistData).length === 0) {
-			console.log(`No waitlist entries for product ${productId}`);
 			return { success: true, notified: 0 };
 		}
 
 		const product = await Product.findById(productId);
 		if (!product) {
-			console.log(`Product ${productId} not found`);
 			return { success: false, error: "Product not found" };
 		}
 
@@ -178,7 +174,6 @@ export const notifyWaitlist = async (productId) => {
 			};
 		});
 
-		console.log(`📱 Notifying ${waitlist.length} users about ${product.name} being back in stock`);
 		
 		let notifiedCount = 0;
 		let failedCount = 0;
@@ -194,15 +189,12 @@ export const notifyWaitlist = async (productId) => {
 							from: twilioPhoneNumber,
 							to: `+91${user.phoneNumber}`, // Assuming Indian phone numbers
 						});
-						console.log(`  ✓ SMS sent to ${user.phoneNumber}`);
 						notifiedCount++;
 					} else {
 						// Development mode - just log
-						console.log(`  📱 Would send SMS to ${user.phoneNumber}: ${product.name} is back in stock!`);
 						notifiedCount++;
 					}
 				} catch (error) {
-					console.error(`  ✗ Failed to send SMS to ${user.phoneNumber}:`, error.message);
 					failedCount++;
 				}
 			}
@@ -211,10 +203,8 @@ export const notifyWaitlist = async (productId) => {
 		// Clear the waitlist after notifying
 		await redis.del(waitlistKey);
 
-		console.log(`✓ Notified ${notifiedCount} users, ${failedCount} failed`);
 		return { success: true, notified: notifiedCount, failed: failedCount };
 	} catch (error) {
-		console.error("Error notifying waitlist:", error);
 		return { success: false, error: error.message };
 	}
 };
@@ -252,7 +242,6 @@ export const removeFromWaitlist = async (req, res) => {
 			message: "You have been removed from the waitlist"
 		});
 	} catch (error) {
-		console.error("Error removing from waitlist:", error);
 		return res.status(500).json({
 			success: false,
 			message: "Failed to remove from waitlist"

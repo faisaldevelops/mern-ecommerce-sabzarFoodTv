@@ -11,7 +11,6 @@ export const getAddresses = async (req, res) => {
 
     res.json(user.addresses || []);
   } catch (error) {
-    console.error("Error fetching addresses:", error);
     res.status(500).json({ message: "Failed to fetch addresses", error: error.message });
   }
 };
@@ -60,7 +59,6 @@ export const addAddress = async (req, res) => {
     
     res.status(201).json(addedAddress);
   } catch (error) {
-    console.error("Error adding address:", error);
     res.status(500).json({ message: "Failed to add address", error: error.message });
   }
 };
@@ -88,7 +86,6 @@ export const deleteAddress = async (req, res) => {
 
     res.json({ message: "Address deleted successfully", addresses: user.addresses });
   } catch (error) {
-    console.error("Error deleting address:", error);
     res.status(500).json({ message: "Failed to delete address", error: error.message });
   }
 };
@@ -130,7 +127,6 @@ export const updateAddress = async (req, res) => {
 
     res.json(user.addresses[addressIndex]);
   } catch (error) {
-    console.error("Error updating address:", error);
     res.status(500).json({ message: "Failed to update address", error: error.message });
   }
 };   

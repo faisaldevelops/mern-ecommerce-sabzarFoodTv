@@ -1,11 +1,11 @@
 import { ShoppingCart, AlertCircle, Tag, Zap, Plus, Minus, Bell } from "lucide-react";
 import { useCartStore } from "../stores/useCartStore";
 import toast from "react-hot-toast";
-import { useState } from "react";
+import { useState, memo } from "react";
 import BuyNowModal from "./BuyNowModal";
 import WaitlistModal from "./WaitlistModal";
 
-const ProductCard = ({ product }) => {
+const ProductCard = memo(({ product }) => {
 	const { addToCart, cart, updateQuantity } = useCartStore();
 	const [showBuyNow, setShowBuyNow] = useState(false);
 	const [showWaitlist, setShowWaitlist] = useState(false);
@@ -170,5 +170,8 @@ const ProductCard = ({ product }) => {
 			/>
 		</>
 	);
-};
+});
+
+ProductCard.displayName = 'ProductCard';
+
 export default ProductCard;

@@ -27,7 +27,6 @@ export const protectRoute = async (req, res, next) => {
 			throw error;
 		}
 	} catch (error) {
-		console.log("Error in protectRoute middleware", error.message);
 		return res.status(401).json({ message: "Unauthorized - Invalid access token" });
 	}
 };
@@ -68,7 +67,6 @@ export const optionalAuth = async (req, res, next) => {
 			throw error;
 		}
 	} catch (error) {
-		console.log("Error in optionalAuth middleware", error.message);
 		req.user = null;
 		next();
 	}

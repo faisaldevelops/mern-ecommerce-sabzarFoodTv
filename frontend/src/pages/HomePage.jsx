@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useProductStore } from "../stores/useProductStore";
 import ProductCard from "../components/ProductCard";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -10,6 +10,12 @@ const HomePage = () => {
 	useEffect(() => {
 		fetchAllProducts();
 	}, [fetchAllProducts]);
+
+	const productsList = useMemo(() => 
+		products?.map((product) => (
+			<ProductCard key={product._id} product={product} />
+		)), [products]
+	);
 
 	if (loading) {
 		return <LoadingSpinner />;
@@ -32,9 +38,7 @@ const HomePage = () => {
 						</div>
 					)}
 
-					{products?.map((product) => (
-						<ProductCard key={product._id} product={product} />
-					))}
+					{productsList}
 				</motion.div>
 			</div>
 		</div>

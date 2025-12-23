@@ -16,7 +16,6 @@ if (accountSid && authToken) {
 // Helper function to send SMS notification
 const sendOrderStatusSMS = async (phoneNumber, orderPublicId, status) => {
 	if (!twilioClient || !twilioPhoneNumber) {
-		console.log(`SMS not sent (Twilio not configured) - Order ${orderPublicId} status: ${status}`);
 		return { success: false, reason: "Twilio not configured" };
 	}
 
@@ -37,10 +36,8 @@ const sendOrderStatusSMS = async (phoneNumber, orderPublicId, status) => {
 			to: `+91${phoneNumber}`, // Assuming Indian phone numbers
 		});
 
-		console.log(`SMS sent to ${phoneNumber} for order ${orderPublicId} - Status: ${status}`);
 		return { success: true };
 	} catch (error) {
-		console.error(`Failed to send SMS to ${phoneNumber}:`, error.message);
 		return { success: false, reason: error.message };
 	}
 };
@@ -133,7 +130,6 @@ export const getOrdersData = async (req, res) => {
 
 		return res.json({ success: true, data: formatted });
 	} catch (err) {
-		console.error('Error fetching orders:', err);
 		return res.status(500).json({ success: false, message: 'Server error fetching orders' });
 	}
 };
@@ -168,7 +164,6 @@ export const getUserOrders = async (req, res) => {
 
 		res.json({ success: true, data: formatted });
 	} catch (error) {
-		console.error('Error fetching user orders:', error);
 		res.status(500).json({ success: false, message: 'Server error fetching user orders' });
 	}
 };
@@ -198,7 +193,6 @@ export const updateOrderTracking = async (req, res) => {
 			if ((trackingStatus === "shipped" || trackingStatus === "delivered") && order.user?.phoneNumber) {
 				// Send SMS asynchronously (don't wait for it to complete)
 				sendOrderStatusSMS(order.user.phoneNumber, order.publicOrderId, trackingStatus)
-					.catch(error => console.error("SMS notification error:", error));
 			}
 		}
 
@@ -225,7 +219,6 @@ export const updateOrderTracking = async (req, res) => {
 			},
 		});
 	} catch (error) {
-		console.error('Error updating order tracking:', error);
 		res.status(500).json({ success: false, message: 'Server error updating order tracking' });
 	}
 };
@@ -257,7 +250,6 @@ export const getOrderTracking = async (req, res) => {
 			},
 		});
 	} catch (error) {
-		console.error('Error fetching order tracking:', error);
 		res.status(500).json({ success: false, message: 'Server error fetching order tracking' });
 	}
 };
@@ -388,7 +380,6 @@ export const getAddressSheet = async (req, res) => {
 		res.setHeader('Content-Type', 'text/html');
 		res.send(html);
 	} catch (err) {
-		console.error('Error generating address sheet:', err);
 		return res.status(500).json({ success: false, message: 'Server error generating address sheet' });
 	}
 };
@@ -524,7 +515,6 @@ export const exportOrdersCSV = async (req, res) => {
 		
 		res.send(csv);
 	} catch (err) {
-		console.error('Error exporting orders to CSV:', err);
 		return res.status(500).json({ success: false, message: 'Server error exporting orders' });
 	}
 };

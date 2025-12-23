@@ -2,27 +2,27 @@ import { Home, ShoppingCart, User, LogOut, LogIn, UserPlus, LayoutDashboard } fr
 import { Link } from "react-router-dom";
 import { useUserStore } from "../stores/useUserStore";
 import { useCartStore } from "../stores/useCartStore";
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 
-const Navbar = () => {
+const Navbar = memo(() => {
 	const { user, logout } = useUserStore();
 	const isAdmin = user?.role === "admin";
 	const { cart } = useCartStore();
 	const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-	const handleLogoutClick = () => {
+	const handleLogoutClick = useCallback(() => {
 		setShowLogoutModal(true);
-	};
+	}, []);
 
-	const handleConfirmLogout = () => {
+	const handleConfirmLogout = useCallback(() => {
 		setShowLogoutModal(false);
 		logout();
-	};
+	}, [logout]);
 
-	const handleCancelLogout = () => {
+	const handleCancelLogout = useCallback(() => {
 		setShowLogoutModal(false);
-	};
+	}, []);
 
 	return (
 		<>
@@ -149,5 +149,8 @@ const Navbar = () => {
 		)}
 		</>
 	);
-};
+});
+
+Navbar.displayName = 'Navbar';
+
 export default Navbar;
