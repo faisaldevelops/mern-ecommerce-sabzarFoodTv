@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useUserStore } from "../stores/useUserStore";
 import { useCartStore } from "../stores/useCartStore";
 import { useState, useCallback, memo } from "react";
-import { motion } from "framer-motion";
 
 const Navbar = memo(() => {
 	const { user, logout } = useUserStore();
@@ -111,19 +110,12 @@ const Navbar = memo(() => {
 
 		{/* Logout Confirmation Modal */}
 		{showLogoutModal && (
-			<div className="fixed inset-0 z-50 flex items-center justify-center">
-				<motion.div
+			<div className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn">
+				<div
 					className="absolute inset-0 bg-black/50"
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
 					onClick={handleCancelLogout}
 				/>
-				<motion.div
-					className="relative z-10 w-full max-w-sm rounded-lg border border-stone-200 bg-white p-6 shadow-xl mx-4"
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.25 }}
-				>
+				<div className="relative z-10 w-full max-w-sm rounded-lg border border-stone-200 bg-white p-6 shadow-xl mx-4 animate-slideUp">
 					<h3 className="text-xl font-bold text-stone-900 mb-3">
 						Confirm Logout
 					</h3>
@@ -144,7 +136,7 @@ const Navbar = memo(() => {
 							Logout
 						</button>
 					</div>
-				</motion.div>
+				</div>
 			</div>
 		)}
 		</>

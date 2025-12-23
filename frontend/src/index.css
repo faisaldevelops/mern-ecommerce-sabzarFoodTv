@@ -4,6 +4,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS animations to replace framer-motion in Navbar */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.25s ease-out;
+}
+
 body {
 	font-feature-settings: 'kern' 1;
 	-webkit-font-smoothing: antialiased;

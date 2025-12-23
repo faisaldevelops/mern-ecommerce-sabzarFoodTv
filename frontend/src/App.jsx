@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { useUserStore } from "./stores/useUserStore";
+import { useUserStore, initAuthInterceptor } from "./stores/useUserStore";
 import { lazy, Suspense, useEffect } from "react";
 import { useCartStore } from "./stores/useCartStore";
 
@@ -23,11 +23,23 @@ function App() {
 	const { initCart } = useCartStore();
 	
 	useEffect(() => {
+		// Initialize auth interceptor after mount
+		initAuthInterceptor();
 		checkAuth();
 	}, [checkAuth]);
 
 	useEffect(() => {
-		initCart();
+		// Defer cart hydration until after first paint
+		if (typeof requestIdleCallback !== 'undefined') {
+			requestIdleCallback(() => {
+				initCart();
+			}, { timeout: 2000 });
+		} else {
+			// Fallback for browsers without requestIdleCallback
+			setTimeout(() => {
+				initCart();
+			}, 100);
+		}
 	}, [initCart]);
 
 	if (checkingAuth) return <LoadingSpinner />;
