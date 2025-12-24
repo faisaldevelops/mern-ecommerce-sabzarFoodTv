@@ -147,7 +147,7 @@ const BuyNowModal = ({ isOpen, onClose, product }) => {
           {/* Total */}
           <div className="mb-6 flex justify-between items-center py-3 border-t border-stone-200">
             <span className="text-lg font-medium text-stone-900">Total:</span>
-            <span className="text-2xl font-bold text-stone-900">${totalPrice}</span>
+            <span className="text-2xl font-bold text-stone-900">₹{totalPrice}</span>
           </div>
 
           {/* Proceed Button */}

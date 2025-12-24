@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-const RefundReturnPolicyPage = () => {
+const ShippingPolicyPage = () => {
 	return (
 		<div className='min-h-screen bg-stone-50 text-stone-900 py-12 px-4'>
 			<div className='max-w-4xl mx-auto'>
@@ -14,105 +14,34 @@ const RefundReturnPolicyPage = () => {
 				</Link>
 
 				<div className='bg-white rounded-lg shadow-sm border border-stone-200 p-8'>
-					<h1 className='text-3xl font-bold text-stone-900 mb-2'>Return and Refund Policy</h1>
+					<h1 className='text-3xl font-bold text-stone-900 mb-2'>Shipping Policy</h1>
 					<p className='text-sm text-stone-600 mb-8'>Last updated: 19th December 2025</p>
 
 					<div className='prose prose-stone max-w-none space-y-6'>
 						<section>
-							<p className='text-stone-700 leading-relaxed mb-4'>
-								We appreciate you showing interest in Sabzar Foods.
-							</p>
-							<p className='text-stone-700 leading-relaxed mb-4'>
-								Should you be anything less than completely satisfied with your order, we encourage you to consult our detailed policy regarding refunds and returns.
-							</p>
-							<p className='text-stone-700 leading-relaxed'>
-								The terms and conditions outlined below govern all products you have purchased from us.
-							</p>
-						</section>
-
-						<section>
-							<h2 className='text-xl font-semibold text-stone-900 mb-3'>Order Cancellations</h2>
-							<p className='text-stone-700 leading-relaxed mb-3'>
-								You have the right to cancel your order within 2 hours of placing it, without needing to provide any reason.
-							</p>
-							<div className='space-y-3'>
-								<p className='text-stone-700 leading-relaxed'>
-									<strong className='text-stone-900'>Cancellation Deadline:</strong>
-								</p>
-								<p className='text-stone-700 leading-relaxed ml-4'>
-									The deadline for cancelling an order is 2 hours from the time you place the order for the Goods.
-								</p>
-								<p className='text-stone-700 leading-relaxed mt-4'>
-									<strong className='text-stone-900'>How to Cancel:</strong>
-								</p>
-								<p className='text-stone-700 leading-relaxed mb-2 ml-4'>
-									To exercise your right to cancel, you must clearly inform us of your decision and provide your Order ID. You can notify us by:
-								</p>
-								<ul className='list-disc list-inside text-stone-700 space-y-1 ml-8'>
-									<li>Emailing us at <a href='mailto:orders@sabzarfoods.in' className='text-stone-800 underline hover:text-stone-900'>orders@sabzarfoods.in</a>.</li>
-									<li>Sending a WhatsApp text message. <a href='http://wa.me/917051896324' target='_blank' rel='noopener noreferrer' className='text-stone-800 underline hover:text-stone-900'>Click here</a> to start a conversation with us on WhatsApp.</li>
-								</ul>
-								<p className='text-stone-700 leading-relaxed mt-4'>
-									<strong className='text-stone-900'>Refunds:</strong>
-								</p>
-								<p className='text-stone-700 leading-relaxed ml-4'>
-									We will process your reimbursement no later than 14 days from the day on which we receive the cancellation notice. The refund will be issued using the same method of payment you used for the original order, and you will not incur any fees for this reimbursement.
-								</p>
-								<p className='text-stone-700 leading-relaxed mt-4 font-medium'>
-									<strong className='text-stone-900'>Important Note:</strong> Orders that have already been dispatched are not eligible for cancellation.
-								</p>
-							</div>
-						</section>
-
-						<section>
-							<h2 className='text-xl font-semibold text-stone-900 mb-3'>No Returns or Exchange Policy</h2>
-							<h3 className='text-lg font-medium text-stone-800 mb-3'>Sabzar Food TV - Replacement Policy</h3>
-							<p className='text-stone-700 leading-relaxed mb-4'>
-								Due to the perishable nature of our products, we unfortunately cannot accept returns.
-							</p>
-							<div className='space-y-3'>
-								<p className='text-stone-700 leading-relaxed'>
-									<strong className='text-stone-900'>Damaged Shipments:</strong>
-								</p>
-								<ul className='list-disc list-inside text-stone-700 space-y-1 ml-4'>
-									<li>If your order arrives damaged, you must contact us within 72 hours of receipt.</li>
-									<li>To request a replacement, please send images or a video of the damaged items, along with your order ID, via email or WhatsApp.</li>
-									<li>We reserve the right to review the submitted images/videos and determine the authenticity of the damage before issuing a replacement order.</li>
-								</ul>
-								<p className='text-stone-700 leading-relaxed mt-4'>
-									<strong className='text-stone-900'>Limitation of Policy:</strong> We reserve the right to limit the amount of refunds or replacements provided. We also reserve the right, in our sole discretion, to refuse a replacement for any merchandise that does not comply with the conditions outlined above.
-								</p>
-							</div>
-						</section>
-
-						<section>
-							<h2 className='text-xl font-semibold text-stone-900 mb-3'>Shipping Policy</h2>
+							<h2 className='text-xl font-semibold text-stone-900 mb-3'>Interpretation and Definitions</h2>
 							
-							<h3 className='text-lg font-medium text-stone-800 mb-3 mt-4'>Interpretation and Definitions</h3>
-							<div className='space-y-3 mb-4'>
-								<p className='text-stone-700 leading-relaxed'>
-									<strong className='text-stone-900'>Interpretation</strong>
-								</p>
-								<p className='text-stone-700 leading-relaxed ml-4'>
-									The words of which the initial letter is capitalised have meanings defined under the following conditions. The following definitions shall have the same meaning regardless of whether they appear in singular or in plural.
-								</p>
-								<p className='text-stone-700 leading-relaxed mt-3'>
-									<strong className='text-stone-900'>Definitions</strong>
-								</p>
-								<p className='text-stone-700 leading-relaxed mb-2 ml-4'>
-									For the purposes of this Return and Refund Policy:
-								</p>
-								<ul className='list-disc list-inside text-stone-700 space-y-1 ml-8'>
-									<li><strong className='text-stone-900'>Company</strong> (referred to as either "the Company", "We", "Us" or "Our" in this Agreement) refers to Main Chowk, Kupwara, India 193222.</li>
-									<li><strong className='text-stone-900'>Goods</strong> refer to the items offered for sale on the Service.</li>
-									<li><strong className='text-stone-900'>Orders</strong> mean a request by You to purchase Goods from Us.</li>
-									<li><strong className='text-stone-900'>Service</strong> refers to the Website.</li>
-									<li><strong className='text-stone-900'>Website</strong> refers to Sabzar Foods, accessible from <a href='https://www.sabzarfoods.in' target='_blank' rel='noopener noreferrer' className='text-stone-800 underline hover:text-stone-900'>https://www.sabzarfoods.in</a></li>
-									<li><strong className='text-stone-900'>You</strong> means the individual accessing or using the Service, or the company, or other legal entity on behalf of which such individual is accessing or using the Service, as applicable.</li>
-								</ul>
-							</div>
+							<h3 className='text-lg font-medium text-stone-800 mb-3 mt-4'>Interpretation</h3>
+							<p className='text-stone-700 leading-relaxed mb-4'>
+								The words of which the initial letter is capitalised have meanings defined under the following conditions. The following definitions shall have the same meaning regardless of whether they appear in singular or in plural.
+							</p>
 
-							<h3 className='text-lg font-medium text-stone-800 mb-3 mt-6'>Shipping Duration</h3>
+							<h3 className='text-lg font-medium text-stone-800 mb-3 mt-4'>Definitions</h3>
+							<p className='text-stone-700 leading-relaxed mb-2'>
+								For the purposes of this Shipping Policy:
+							</p>
+							<ul className='list-disc list-inside text-stone-700 space-y-2 ml-4'>
+								<li><strong className='text-stone-900'>Company</strong> (referred to as either "the Company", "We", "Us" or "Our" in this Agreement) refers to Main Chowk, Kupwara, India 193222.</li>
+								<li><strong className='text-stone-900'>Goods</strong> refer to the items offered for sale on the Service.</li>
+								<li><strong className='text-stone-900'>Orders</strong> mean a request by You to purchase Goods from Us.</li>
+								<li><strong className='text-stone-900'>Service</strong> refers to the Website.</li>
+								<li><strong className='text-stone-900'>Website</strong> refers to Sabzar Foods, accessible from <a href='https://www.sabzarfoods.in' target='_blank' rel='noopener noreferrer' className='text-stone-800 underline hover:text-stone-900'>https://www.sabzarfoods.in</a></li>
+								<li><strong className='text-stone-900'>You</strong> means the individual accessing or using the Service, or the company, or other legal entity on behalf of which such individual is accessing or using the Service, as applicable.</li>
+							</ul>
+						</section>
+
+						<section>
+							<h2 className='text-xl font-semibold text-stone-900 mb-3'>Shipping Duration</h2>
 							<p className='text-stone-700 leading-relaxed mb-4'>
 								We endeavour but do not guarantee to deliver the products to buyers within the suggested shipping times mentioned below:
 							</p>
@@ -230,33 +159,20 @@ const RefundReturnPolicyPage = () => {
 								<li>Email: <a href='mailto:orders@sabzarfoods.in' className='text-stone-800 underline hover:text-stone-900'>orders@sabzarfoods.in</a></li>
 								<li>WhatsApp: <a href='http://wa.me/917051896324' target='_blank' rel='noopener noreferrer' className='text-stone-800 underline hover:text-stone-900'>Click here</a></li>
 							</ul>
+						</section>
 
-							<h3 className='text-lg font-medium text-stone-800 mb-3 mt-6'>Free Shipping</h3>
+						<section>
+							<h2 className='text-xl font-semibold text-stone-900 mb-3'>Free Shipping</h2>
 							<p className='text-stone-700 leading-relaxed mb-4'>
 								Free shipping is only applicable on all prepaid orders above Rs 1499. This is only valid if the order is sent to one address. In the case of gifting and customised orders which you order from us through phone or email additional charges may be incurred on shipping. Our shipping partners are Bluedart, Delhivery, Amazon Shipping, Xpressbees, DTDC and India Post under Free Shipping.
-							</p>
-
-							<h3 className='text-lg font-medium text-stone-800 mb-3 mt-6'>Express Shipping</h3>
-							<p className='text-stone-700 leading-relaxed mb-4'>
-								Express Shipping is only applicable on prepaid orders where the express shipping option is added. Our shipping partner is Bluedart Express. Express Shipping is subject to pincode serviceability. If the pincode is not serviceable, we will contact you first, after which you will have the option to take a refund on the shipping amount and continue with another shipping option as mutually discussed.
 							</p>
 						</section>
 
 						<section>
-							<h2 className='text-xl font-semibold text-stone-900 mb-3'>Contact Us</h2>
+							<h2 className='text-xl font-semibold text-stone-900 mb-3'>Express Shipping</h2>
 							<p className='text-stone-700 leading-relaxed mb-4'>
-								Should you have any inquiries regarding our Returns and Refunds Policy, please feel free to reach out to us through the following contact methods:
+								Express Shipping is only applicable on prepaid orders where the express shipping option is added. Our shipping partner is Bluedart Express. Express Shipping is subject to pincode serviceability. If the pincode is not serviceable, we will contact you first, after which you will have the option to take a refund on the shipping amount and continue with another shipping option as mutually discussed.
 							</p>
-							<div className='space-y-2 ml-4'>
-								<p className='text-stone-700 leading-relaxed'>
-									<strong className='text-stone-900'>Contact Information:</strong>
-								</p>
-								<ul className='list-disc list-inside text-stone-700 space-y-1 ml-4'>
-									<li>WhatsApp: <a href='http://wa.me/917051896324' target='_blank' rel='noopener noreferrer' className='text-stone-800 underline hover:text-stone-900'>+91-7051896324</a></li>
-									<li>Email: <a href='mailto:orders@sabzarfoods.in' className='text-stone-800 underline hover:text-stone-900'>orders@sabzarfoods.in</a></li>
-									<li>Post: Sabzar Foods, Main Chowk, Kupwara Dist Kupwara, J&K, India. 193222</li>
-								</ul>
-							</div>
 						</section>
 					</div>
 				</div>
@@ -265,5 +181,5 @@ const RefundReturnPolicyPage = () => {
 	);
 };
 
-export default RefundReturnPolicyPage;
+export default ShippingPolicyPage;
 

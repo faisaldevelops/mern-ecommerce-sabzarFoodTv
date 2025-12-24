@@ -1,13 +1,14 @@
 import { motion } from "framer-motion";
 import { useCartStore } from "../stores/useCartStore";
 import { useUserStore } from "../stores/useUserStore";
+import { useAddressStore } from "../stores/useAddressStore";
 import { Link, useNavigate } from "react-router-dom";
-import { MoveRight } from "lucide-react";
+import { MoveRight, MapPin, Plus, ChevronDown } from "lucide-react";
 import axios from "../lib/axios";
 import toast from "react-hot-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PhoneAuthModal from "./PhoneAuthModal";
-import AddressSelectionModal from "./AddressSelectionModal";
+import AddressModal from "./AddressModal";
 import InsufficientStockModal from "./InsufficientStockModal";
 import CountdownTimer from "./CountdownTimer";
 import { SHOP_CONFIG } from "../config/constants";
@@ -15,19 +16,50 @@ import { SHOP_CONFIG } from "../config/constants";
 const OrderSummary = () => {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [showPhoneAuth, setShowPhoneAuth] = useState(false);
-	const [showAddressSelection, setShowAddressSelection] = useState(false);
+	const [showAddressForm, setShowAddressForm] = useState(false);
+	const [showAddressDropdown, setShowAddressDropdown] = useState(false);
 	const [showInsufficientStock, setShowInsufficientStock] = useState(false);
 	const [insufficientItems, setInsufficientItems] = useState([]);
 	const [holdInfo, setHoldInfo] = useState(null); // { expiresAt, localOrderId }
+	const [selectedAddressIndex, setSelectedAddressIndex] = useState(0);
 	const { total, subtotal, cart, updateQuantity } = useCartStore();
 	const { user } = useUserStore();
+	const { address: addresses, fetchAddresses, createAddress, loading: addressLoading } = useAddressStore();
 	const navigate = useNavigate();
 
 	const savings = subtotal - total;
 	const formattedSubtotal = subtotal.toFixed(2);
-	const extraCharges = SHOP_CONFIG.extraCharges; // Extra charges in rupees
+	const extraCharges = 199; // Extra charges (Shipping + Platform Fee) in rupees - constant for now
 	const formattedTotal = (total + extraCharges).toFixed(2);
 	const formattedSavings = savings.toFixed(2);
+
+	// Fetch addresses when user is logged in
+	useEffect(() => {
+		if (user) {
+			fetchAddresses();
+		}
+	}, [user, fetchAddresses]);
+
+	// Set first address as selected by default when addresses are loaded
+	useEffect(() => {
+		if (addresses && addresses.length > 0 && selectedAddressIndex >= addresses.length) {
+			setSelectedAddressIndex(0);
+		}
+	}, [addresses, selectedAddressIndex]);
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (showAddressDropdown && !event.target.closest('.address-dropdown-container')) {
+				setShowAddressDropdown(false);
+			}
+		};
+
+		if (showAddressDropdown) {
+			document.addEventListener('mousedown', handleClickOutside);
+			return () => document.removeEventListener('mousedown', handleClickOutside);
+		}
+	}, [showAddressDropdown]);
 
 	// Handle place order button click
 	const handlePlaceOrder = () => {
@@ -38,19 +70,34 @@ const OrderSummary = () => {
 			return;
 		}
 
-		// User is authenticated, show address selection modal
-		setShowAddressSelection(true);
+		// Check if address is selected
+		if (!addresses || addresses.length === 0) {
+			toast.error("Please add a delivery address");
+			return;
+		}
+
+		// Proceed to payment with selected address
+		const selectedAddress = addresses[selectedAddressIndex];
+		handlePayment(selectedAddress);
 	};
 
 	const handleAuthSuccess = async () => {
-		// Close phone auth modal and immediately open address selection
+		// Close phone auth modal
 		setShowPhoneAuth(false);
-		setShowAddressSelection(true);
+		// Addresses will be fetched automatically via useEffect
 	};
 
-	const handleAddressSelected = (address) => {
-		// Proceed to payment with selected address
-		handlePayment(address);
+	const handleSaveNewAddress = async (addressData) => {
+		try {
+			await createAddress(addressData);
+			setShowAddressForm(false);
+			// Select the newly added address (will be at the end)
+			if (addresses) {
+				setSelectedAddressIndex(addresses.length);
+			}
+		} catch (error) {
+			console.error("Error creating address:", error);
+		}
 	};
 
 	const handlePayment = async (address) => {
@@ -231,6 +278,101 @@ const OrderSummary = () => {
 			)}
 
 			<div className='space-y-4'>
+				{/* Address Selection - Only show when user is logged in */}
+				{user && (
+					<div className='space-y-2'>
+						<p className='text-sm font-semibold text-stone-700'>Delivery Address</p>
+						{addresses && addresses.length > 0 ? (
+							<div className='relative address-dropdown-container'>
+								<button
+									onClick={() => setShowAddressDropdown(!showAddressDropdown)}
+									className='w-full text-left rounded-lg border border-stone-300 bg-stone-50 p-4 hover:bg-stone-100 transition-colors'
+								>
+									<div className='flex items-start gap-3'>
+										<MapPin className='text-stone-600 mt-1 flex-shrink-0' size={20} />
+										<div className='flex-1 min-w-0'>
+											<p className='font-medium text-stone-900'>
+												{addresses[selectedAddressIndex]?.name} • {addresses[selectedAddressIndex]?.phoneNumber}
+											</p>
+											{addresses[selectedAddressIndex]?.email && (
+												<p className='text-sm text-stone-600'>{addresses[selectedAddressIndex]?.email}</p>
+											)}
+											<p className='text-sm text-stone-700 mt-1'>
+												{addresses[selectedAddressIndex]?.houseNumber}, {addresses[selectedAddressIndex]?.streetAddress}
+												{addresses[selectedAddressIndex]?.landmark && `, ${addresses[selectedAddressIndex]?.landmark}`}
+											</p>
+											<p className='text-sm text-stone-700'>
+												{addresses[selectedAddressIndex]?.city}, {addresses[selectedAddressIndex]?.state} - {addresses[selectedAddressIndex]?.pincode}
+											</p>
+										</div>
+										<ChevronDown className={`text-stone-600 flex-shrink-0 transition-transform ${showAddressDropdown ? 'rotate-180' : ''}`} size={20} />
+									</div>
+								</button>
+
+								{/* Address Dropdown */}
+								{showAddressDropdown && (
+									<div className='absolute z-10 w-full mt-2 bg-white border border-stone-300 rounded-lg shadow-lg max-h-64 overflow-y-auto address-dropdown-container'>
+										{addresses.map((addr, index) => (
+											<button
+												key={addr._id || index}
+												onClick={() => {
+													setSelectedAddressIndex(index);
+													setShowAddressDropdown(false);
+												}}
+												className={`w-full text-left p-4 hover:bg-stone-50 transition-colors border-b border-stone-200 last:border-b-0 ${
+													selectedAddressIndex === index ? 'bg-stone-100' : ''
+												}`}
+											>
+												<div className='flex items-start gap-3'>
+													<MapPin className='text-stone-600 mt-1 flex-shrink-0' size={18} />
+													<div className='flex-1 min-w-0'>
+														<p className='font-medium text-stone-900'>
+															{addr.name} • {addr.phoneNumber}
+														</p>
+														{addr.email && <p className='text-sm text-stone-600'>{addr.email}</p>}
+														<p className='text-sm text-stone-700 mt-1'>
+															{addr.houseNumber}, {addr.streetAddress}
+															{addr.landmark && `, ${addr.landmark}`}
+														</p>
+														<p className='text-sm text-stone-700'>
+															{addr.city}, {addr.state} - {addr.pincode}
+														</p>
+													</div>
+													{selectedAddressIndex === index && (
+														<div className='h-5 w-5 rounded-full bg-stone-800 flex items-center justify-center flex-shrink-0'>
+															<svg className='h-3 w-3 text-white' fill='currentColor' viewBox='0 0 20 20'>
+																<path fillRule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clipRule='evenodd' />
+															</svg>
+														</div>
+													)}
+												</div>
+											</button>
+										))}
+										<button
+											onClick={() => {
+												setShowAddressForm(true);
+												setShowAddressDropdown(false);
+											}}
+											className='w-full flex items-center justify-center gap-2 p-4 text-stone-700 hover:bg-stone-50 transition-colors border-t border-stone-200'
+										>
+											<Plus size={18} />
+											Add New Address
+										</button>
+									</div>
+								)}
+							</div>
+						) : (
+							<button
+								onClick={() => setShowAddressForm(true)}
+								className='w-full flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-stone-300 bg-stone-50 px-5 py-4 text-sm font-medium text-stone-700 hover:bg-stone-100 transition-colors'
+							>
+								<Plus size={20} />
+								Add Delivery Address
+							</button>
+						)}
+					</div>
+				)}
+
 				{/* Item Breakdown */}
 				<div className='space-y-2'>
 					<p className='text-sm font-semibold text-stone-700'>Items in your order:</p>
@@ -265,7 +407,7 @@ const OrderSummary = () => {
 						</dl>
 					)}
 					<dl className='flex items-center justify-between gap-4'>
-						<dt className='text-base font-normal text-stone-700'>Extra Charges</dt>
+						<dt className='text-base font-normal text-stone-700'>Extra Charges (Shipping + Platform Fee)</dt>
 						<dd className='text-base font-medium text-stone-900'>₹{extraCharges.toFixed(2)}</dd>
 					</dl>
 					<dl className='flex items-center justify-between gap-4 border-t border-stone-300 pt-2'>
@@ -302,10 +444,11 @@ const OrderSummary = () => {
 				onSuccess={handleAuthSuccess}
 			/>
 			
-			<AddressSelectionModal
-				isOpen={showAddressSelection}
-				onClose={() => setShowAddressSelection(false)}
-				onSelectAddress={handleAddressSelected}
+			<AddressModal
+				isOpen={showAddressForm}
+				onClose={() => setShowAddressForm(false)}
+				onSave={handleSaveNewAddress}
+				loading={addressLoading}
 			/>
 
 			<InsufficientStockModal

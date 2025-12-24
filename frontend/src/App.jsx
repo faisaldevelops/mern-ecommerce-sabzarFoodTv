@@ -9,6 +9,7 @@ import OrderSummaryPage from "./pages/OrderSummaryPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import RefundReturnPolicyPage from "./pages/RefundReturnPolicyPage";
+import ShippingPolicyPage from "./pages/ShippingPolicyPage";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -65,6 +66,7 @@ function App() {
 					<Route path='/privacy-policy' element={<PrivacyPolicyPage />} />
 					<Route path='/terms-of-service' element={<TermsOfServicePage />} />
 					<Route path='/refund-return-policy' element={<RefundReturnPolicyPage />} />
+					<Route path='/shipping-policy' element={<ShippingPolicyPage />} />
 				</Routes>
 			</div>
 			<Footer />

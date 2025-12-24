@@ -4,15 +4,7 @@ const Footer = () => {
 	return (
 		<footer className='bg-stone-100 border-t border-stone-200 mt-auto'>
 			<div className='container mx-auto px-4 py-8'>
-				<div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
-					{/* About Section */}
-					<div>
-						<h3 className='text-base font-semibold text-stone-900 mb-3'>About Us</h3>
-						<p className='text-sm text-stone-600'>
-							Coming soon - Learn more about our story and mission.
-						</p>
-					</div>
-
+				<div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
 					{/* Policies Section */}
 					<div>
 						<h3 className='text-base font-semibold text-stone-900 mb-3'>Policies</h3>
@@ -20,6 +12,11 @@ const Footer = () => {
 							<li>
 								<Link to='/refund-return-policy' className='text-sm text-stone-600 hover:text-stone-900 transition-colors'>
 									Refund & Return Policy
+								</Link>
+							</li>
+							<li>
+								<Link to='/shipping-policy' className='text-sm text-stone-600 hover:text-stone-900 transition-colors'>
+									Shipping Policy
 								</Link>
 							</li>
 							<li>
@@ -38,9 +35,21 @@ const Footer = () => {
 					{/* Contact Section */}
 					<div>
 						<h3 className='text-base font-semibold text-stone-900 mb-3'>Contact Us</h3>
-						<p className='text-sm text-stone-600 mb-2'>
-							Coming soon - Get in touch with our support team.
-						</p>
+						<ul className='space-y-2'>
+							<li>
+								<a href='http://wa.me/917051896324' target='_blank' rel='noopener noreferrer' className='text-sm text-stone-600 hover:text-stone-900 transition-colors inline-flex items-center'>
+									WhatsApp: +91-7051896324
+								</a>
+							</li>
+							<li>
+								<a href='mailto:orders@sabzarfoods.in' className='text-sm text-stone-600 hover:text-stone-900 transition-colors'>
+									Email: orders@sabzarfoods.in
+								</a>
+							</li>
+							<li className='text-sm text-stone-600'>
+								Address: Main Chowk, Kupwara, Dist Kupwara, J&K, India. 193222
+							</li>
+						</ul>
 					</div>
 				</div>
 
