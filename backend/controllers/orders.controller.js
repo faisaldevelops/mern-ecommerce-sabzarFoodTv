@@ -486,7 +486,7 @@ export const getBulkAddressSheets = async (req, res) => {
 			<div class="address-sheet">
 				<div class="header">
 					<div class="order-id">Order #${order.publicOrderId || order._id}</div>
-					<div style="font-size: 10px; color: #666;">Date: ${new Date(order.createdAt).toLocaleDateString()}</div>
+					<div style="font-size: 12px; color: #666;">Date: ${new Date(order.createdAt).toLocaleDateString()}</div>
 				</div>
 				
 				<div class="section">
@@ -549,50 +549,48 @@ export const getBulkAddressSheets = async (req, res) => {
 		}
 		.address-sheet {
 			border: 2px solid #000;
-			padding: 12px;
+			padding: 20px;
 			display: flex;
 			flex-direction: column;
-			justify-content: space-between;
 			height: 100%;
 			overflow: hidden;
 		}
 		.header {
 			text-align: center;
-			border-bottom: 1px solid #000;
-			padding-bottom: 6px;
-			margin-bottom: 8px;
+			border-bottom: 2px solid #000;
+			padding-bottom: 10px;
+			margin-bottom: 15px;
 		}
 		.order-id {
-			font-size: 14px;
+			font-size: 18px;
 			font-weight: bold;
-			margin-bottom: 2px;
+			margin-bottom: 5px;
 		}
 		.section {
-			margin-bottom: 6px;
+			margin-bottom: 15px;
 		}
 		.label {
 			font-weight: bold;
-			font-size: 9px;
+			font-size: 12px;
 			color: #666;
 			text-transform: uppercase;
-			margin-bottom: 2px;
+			margin-bottom: 3px;
 		}
 		.value {
-			font-size: 11px;
-			margin-bottom: 4px;
-			line-height: 1.3;
+			font-size: 16px;
+			margin-bottom: 8px;
+			line-height: 1.4;
 		}
 		.name {
-			font-size: 13px;
+			font-size: 20px;
 			font-weight: bold;
 		}
 		.phone {
-			font-size: 12px;
+			font-size: 18px;
 			font-weight: bold;
 		}
 		.address-line {
-			margin-bottom: 2px;
-			font-size: 10px;
+			margin-bottom: 5px;
 		}
 		@media print {
 			body {
@@ -612,8 +610,8 @@ export const getBulkAddressSheets = async (req, res) => {
 				page-break-after: auto;
 			}
 			.address-sheet {
-				border: 1.5px solid #000;
-				padding: 8px;
+				border: 2px solid #000;
+				padding: 20px;
 				page-break-inside: avoid;
 			}
 			@page {
