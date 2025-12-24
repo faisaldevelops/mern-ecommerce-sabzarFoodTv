@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Truck, Package, CheckCircle, XCircle, Search, Filter, Download, Printer, ChevronLeft, ChevronRight } from "lucide-react";
+import { Truck, Package, CheckCircle, XCircle, Search, Filter, Download, Printer, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 import axios from "../lib/axios";
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
@@ -16,6 +16,15 @@ const OrderslistTab = () => {
         status: 'all'
     });
     const [showFilters, setShowFilters] = useState(false);
+    
+    // Confirmation modal state
+    const [confirmationModal, setConfirmationModal] = useState({
+        isOpen: false,
+        orderId: null,
+        currentStatus: null,
+        newStatus: null,
+        orderPublicId: null
+    });
     
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -104,7 +113,7 @@ const OrderslistTab = () => {
 
     const getStatusBadge = (status) => {
         const statusConfig = {
-            pending: { color: "bg-yellow-500", icon: Package, text: "Pending" },
+            pending: { color: "bg-yellow-500", icon: Package, text: "Payment pending" },
             processing: { color: "bg-blue-500", icon: Package, text: "Processing" },
             shipped: { color: "bg-purple-500", icon: Truck, text: "Shipped" },
             delivered: { color: "bg-green-500", icon: CheckCircle, text: "Delivered" },
@@ -120,6 +129,50 @@ const OrderslistTab = () => {
                 {config.text}
             </span>
         );
+    };
+
+    const getStatusDisplayName = (status) => {
+        const statusNames = {
+            pending: "Payment pending",
+            processing: "Processing",
+            shipped: "Shipped",
+            delivered: "Delivered",
+            cancelled: "Cancelled"
+        };
+        return statusNames[status] || status.charAt(0).toUpperCase() + status.slice(1);
+    };
+
+    const handleStatusChangeClick = (orderId, newStatus, orderPublicId, currentStatus) => {
+        setConfirmationModal({
+            isOpen: true,
+            orderId,
+            currentStatus,
+            newStatus,
+            orderPublicId
+        });
+    };
+
+    const handleConfirmStatusChange = async () => {
+        if (!confirmationModal.orderId || !confirmationModal.newStatus) return;
+        
+        await updateTrackingStatus(confirmationModal.orderId, confirmationModal.newStatus);
+        setConfirmationModal({
+            isOpen: false,
+            orderId: null,
+            currentStatus: null,
+            newStatus: null,
+            orderPublicId: null
+        });
+    };
+
+    const handleCancelStatusChange = () => {
+        setConfirmationModal({
+            isOpen: false,
+            orderId: null,
+            currentStatus: null,
+            newStatus: null,
+            orderPublicId: null
+        });
     };
 
     if (isLoading) {
@@ -178,6 +231,18 @@ const OrderslistTab = () => {
         // Open the address sheet in a new window for printing
         const baseURL = import.meta.env.VITE_API_URL || '';
         const url = `${baseURL}/orders/${orderId}/address-sheet`;
+        window.open(url, '_blank');
+    };
+
+    const handlePrintAllLabels = () => {
+        // Build query parameters from current filters
+        const params = new URLSearchParams();
+        if (debouncedFilters.phoneNumber) params.append('phoneNumber', debouncedFilters.phoneNumber);
+        if (debouncedFilters.orderId) params.append('publicOrderId', debouncedFilters.orderId);
+        if (debouncedFilters.status && debouncedFilters.status !== 'all') params.append('status', debouncedFilters.status);
+        
+        const baseURL = import.meta.env.VITE_API_URL || '';
+        const url = `${baseURL}/orders/bulk-address-sheets?${params.toString()}`;
         window.open(url, '_blank');
     };
 
@@ -338,7 +403,7 @@ const OrderslistTab = () => {
                         className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     >
                         <option value="all">All Statuses</option>
-                        <option value="pending">Pending</option>
+                        <option value="pending">Payment pending</option>
                         <option value="processing">Processing</option>
                         <option value="shipped">Shipped</option>
                         <option value="delivered">Delivered</option>
@@ -372,15 +437,27 @@ const OrderslistTab = () => {
                 </p>
             )}
         </div>
-        <motion.button
-            onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors text-sm font-medium"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-        >
-            <Download className="w-4 h-4" />
-            Export CSV
-        </motion.button>
+        <div className="flex items-center gap-3">
+            <motion.button
+                onClick={handlePrintAllLabels}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                title="Print all address labels for filtered orders"
+            >
+                <Printer className="w-4 h-4" />
+                Print All Labels
+            </motion.button>
+            <motion.button
+                onClick={handleExportCSV}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors text-sm font-medium"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+            >
+                <Download className="w-4 h-4" />
+                Export CSV
+            </motion.button>
+        </div>
     </div>
     
     <div className="space-y-8">
@@ -452,7 +529,7 @@ const OrderslistTab = () => {
                         {['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
                             <button
                                 key={status}
-                                onClick={() => updateTrackingStatus(order.orderId, status)}
+                                onClick={() => handleStatusChangeClick(order.orderId, status, order.publicOrderId || order.orderId, order.trackingStatus)}
                                 disabled={updatingOrder === order.orderId || order.trackingStatus === status}
                                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
                                     order.trackingStatus === status
@@ -460,7 +537,7 @@ const OrderslistTab = () => {
                                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                 } disabled:opacity-50`}
                             >
-                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                                {getStatusDisplayName(status)}
                             </button>
                         ))}
                     </div>
@@ -542,6 +619,53 @@ const OrderslistTab = () => {
 
     {/* Pagination Controls */}
     {renderPaginationControls()}
+
+    {/* Confirmation Modal */}
+    {confirmationModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700"
+            >
+                <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                        <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-white mb-2">
+                            Confirm Status Change
+                        </h3>
+                        <p className="text-gray-300 text-sm mb-4">
+                            Are you sure you want to change the status of Order #{confirmationModal.orderPublicId} from{' '}
+                            <span className="font-semibold text-white">
+                                {getStatusDisplayName(confirmationModal.currentStatus)}
+                            </span>{' '}
+                            to{' '}
+                            <span className="font-semibold text-white">
+                                {getStatusDisplayName(confirmationModal.newStatus)}
+                            </span>?
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={handleCancelStatusChange}
+                                className="px-4 py-2 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors text-sm font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmStatusChange}
+                                disabled={updatingOrder === confirmationModal.orderId}
+                                className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {updatingOrder === confirmationModal.orderId ? 'Updating...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    )}
 
     </>
     

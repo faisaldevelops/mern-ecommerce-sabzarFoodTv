@@ -416,6 +416,198 @@ export const getAddressSheet = async (req, res) => {
 	}
 };
 
+export const getBulkAddressSheets = async (req, res) => {
+	try {
+		// Extract filter parameters from query (same as getOrdersData)
+		const { phoneNumber, publicOrderId, status } = req.query;
+		
+		// Build filter object
+		let filter = {};
+		
+		// Filter by publicOrderId
+		if (publicOrderId) {
+			filter.publicOrderId = publicOrderId;
+		}
+		
+		// Filter by status (trackingStatus)
+		if (status && status !== 'all') {
+			const allowedStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+			if (!allowedStatuses.includes(status)) {
+				return res.status(400).json({ 
+					success: false, 
+					message: 'Invalid status value' 
+				});
+			}
+			filter.trackingStatus = status;
+		}
+		
+		// Filter by user phone number
+		if (phoneNumber) {
+			const sanitizedPhone = phoneNumber.replace(/[^0-9+\-\s()]/g, '');
+			if (sanitizedPhone) {
+				const User = mongoose.model('User');
+				const users = await User.find({ phoneNumber: { $regex: sanitizedPhone, $options: 'i' } }, '_id');
+				const userIds = users.map(u => u._id);
+				if (userIds.length > 0) {
+					filter.user = { $in: userIds };
+				} else {
+					filter.user = null;
+				}
+			}
+		}
+		
+		// Find all orders matching filters (no pagination)
+		const orders = await Order.find(filter)
+			.populate('user', 'name phoneNumber')
+			.sort({ createdAt: -1 })
+			.lean();
+
+		if (orders.length === 0) {
+			return res.status(404).send(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<meta charset="UTF-8">
+					<title>No Orders Found</title>
+					<style>
+						body { font-family: Arial, sans-serif; padding: 40px; text-align: center; }
+					</style>
+				</head>
+				<body>
+					<h1>No orders found matching the current filters.</h1>
+				</body>
+				</html>
+			`);
+		}
+
+		// Generate HTML for all address sheets
+		const addressSheetsHTML = orders.map(order => {
+			const address = order.address || {};
+			const user = order.user || {};
+			
+			return `
+		<div class="address-sheet" style="page-break-after: always;">
+			<div class="header">
+				<div class="order-id">Order #${order.publicOrderId || order._id}</div>
+				<div style="font-size: 12px; color: #666;">Date: ${new Date(order.createdAt).toLocaleDateString()}</div>
+			</div>
+			
+			<div class="section">
+				<div class="label">Deliver To:</div>
+				<div class="value name">${address.name || user.name || 'N/A'}</div>
+			</div>
+			
+			<div class="section">
+				<div class="label">Phone:</div>
+				<div class="value phone">${address.phoneNumber || user.phoneNumber || 'N/A'}</div>
+			</div>
+			
+			<div class="section">
+				<div class="label">Address:</div>
+				<div class="value">
+					<div class="address-line">${address.houseNumber || 'N/A'}, ${address.streetAddress || 'N/A'}</div>
+					${address.landmark ? `<div class="address-line">Near: ${address.landmark}</div>` : ''}
+					<div class="address-line">${address.city || 'N/A'}, ${address.state || 'N/A'}</div>
+					<div class="address-line" style="font-weight: bold;">PIN: ${address.pincode || 'N/A'}</div>
+				</div>
+			</div>
+		</div>
+			`;
+		}).join('');
+
+		const html = `
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Bulk Address Sheets - ${orders.length} Order${orders.length !== 1 ? 's' : ''}</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+		body {
+			font-family: Arial, sans-serif;
+			padding: 20px;
+		}
+		.address-sheet {
+			width: 400px;
+			border: 2px solid #000;
+			padding: 20px;
+			margin: 0 auto 30px;
+		}
+		.header {
+			text-align: center;
+			border-bottom: 2px solid #000;
+			padding-bottom: 10px;
+			margin-bottom: 15px;
+		}
+		.order-id {
+			font-size: 18px;
+			font-weight: bold;
+			margin-bottom: 5px;
+		}
+		.section {
+			margin-bottom: 15px;
+		}
+		.label {
+			font-weight: bold;
+			font-size: 12px;
+			color: #666;
+			text-transform: uppercase;
+			margin-bottom: 3px;
+		}
+		.value {
+			font-size: 16px;
+			margin-bottom: 8px;
+			line-height: 1.4;
+		}
+		.name {
+			font-size: 20px;
+			font-weight: bold;
+		}
+		.phone {
+			font-size: 18px;
+			font-weight: bold;
+		}
+		.address-line {
+			margin-bottom: 5px;
+		}
+		@media print {
+			body {
+				padding: 0;
+			}
+			.address-sheet {
+				border: 2px solid #000;
+				margin-bottom: 20px;
+			}
+			.address-sheet:last-child {
+				margin-bottom: 0;
+			}
+		}
+	</style>
+</head>
+<body>
+	${addressSheetsHTML}
+	<script>
+		// Auto-print when page loads
+		window.onload = function() {
+			window.print();
+		};
+	</script>
+</body>
+</html>
+		`;
+
+		res.setHeader('Content-Type', 'text/html');
+		res.send(html);
+	} catch (err) {
+		console.error('Error generating bulk address sheets:', err);
+		return res.status(500).json({ success: false, message: 'Server error generating bulk address sheets' });
+	}
+};
+
 export const exportOrdersCSV = async (req, res) => {
 	try {
 		// Extract filter parameters from query
