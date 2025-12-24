@@ -22,7 +22,7 @@ const OrderSummary = () => {
 	const [insufficientItems, setInsufficientItems] = useState([]);
 	const [holdInfo, setHoldInfo] = useState(null); // { expiresAt, localOrderId }
 	const [selectedAddressIndex, setSelectedAddressIndex] = useState(0);
-	const { total, subtotal, cart, updateQuantity } = useCartStore();
+	const { total, subtotal, cart, updateQuantity, clearCart } = useCartStore();
 	const { user } = useUserStore();
 	const { address: addresses, fetchAddresses, createAddress, loading: addressLoading } = useAddressStore();
 	const navigate = useNavigate();
@@ -152,6 +152,7 @@ const OrderSummary = () => {
 						if (verifyRes.data?.success) {
 							toast.success("Payment successful!");
 							setHoldInfo(null);
+							clearCart(); // Clear cart on successful payment
 							window.location.href = `/purchase-success?orderId=${encodeURIComponent(orderId)}`;
 						} else {
 							// Check for insufficient stock error
