@@ -358,49 +358,53 @@ const OrderSummary = () => {
 
 								{/* Address Dropdown */}
 								{showAddressDropdown && (
-									<div className='absolute z-10 w-full mt-2 bg-white border border-stone-300 rounded-lg shadow-lg max-h-64 overflow-y-auto address-dropdown-container'>
-										{addresses.map((addr, index) => (
-											<button
-												key={addr._id || index}
-												onClick={() => {
-													setSelectedAddressIndex(index);
-													setShowAddressDropdown(false);
-												}}
-												className={`w-full text-left p-4 hover:bg-stone-50 transition-colors border-b border-stone-200 last:border-b-0 ${
-													selectedAddressIndex === index ? 'bg-stone-100' : ''
-												}`}
-											>
-												<div className='flex items-start gap-3'>
-													<MapPin className='text-stone-600 mt-1 flex-shrink-0' size={18} />
-													<div className='flex-1 min-w-0'>
-														<p className='font-medium text-stone-900'>
-															{addr.name} • {addr.phoneNumber}
-														</p>
-														{addr.email && <p className='text-sm text-stone-600'>{addr.email}</p>}
-														<p className='text-sm text-stone-700 mt-1'>
-															{addr.houseNumber}, {addr.streetAddress}
-															{addr.landmark && `, ${addr.landmark}`}
-														</p>
-														<p className='text-sm text-stone-700'>
-															{addr.city}, {addr.state} - {addr.pincode}
-														</p>
-													</div>
-													{selectedAddressIndex === index && (
-														<div className='h-5 w-5 rounded-full bg-stone-800 flex items-center justify-center flex-shrink-0'>
-															<svg className='h-3 w-3 text-white' fill='currentColor' viewBox='0 0 20 20'>
-																<path fillRule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clipRule='evenodd' />
-															</svg>
+									<div className='absolute z-10 w-full mt-2 bg-white border border-stone-300 rounded-lg shadow-lg flex flex-col max-h-64 address-dropdown-container'>
+										{/* Scrollable address list */}
+										<div className='overflow-y-auto flex-1'>
+											{addresses.map((addr, index) => (
+												<button
+													key={addr._id || index}
+													onClick={() => {
+														setSelectedAddressIndex(index);
+														setShowAddressDropdown(false);
+													}}
+													className={`w-full text-left p-4 hover:bg-stone-50 transition-colors border-b border-stone-200 ${
+														selectedAddressIndex === index ? 'bg-stone-100' : ''
+													}`}
+												>
+													<div className='flex items-start gap-3'>
+														<MapPin className='text-stone-600 mt-1 flex-shrink-0' size={18} />
+														<div className='flex-1 min-w-0'>
+															<p className='font-medium text-stone-900'>
+																{addr.name} • {addr.phoneNumber}
+															</p>
+															{addr.email && <p className='text-sm text-stone-600'>{addr.email}</p>}
+															<p className='text-sm text-stone-700 mt-1'>
+																{addr.houseNumber}, {addr.streetAddress}
+																{addr.landmark && `, ${addr.landmark}`}
+															</p>
+															<p className='text-sm text-stone-700'>
+																{addr.city}, {addr.state} - {addr.pincode}
+															</p>
 														</div>
-													)}
-												</div>
-											</button>
-										))}
+														{selectedAddressIndex === index && (
+															<div className='h-5 w-5 rounded-full bg-stone-800 flex items-center justify-center flex-shrink-0'>
+																<svg className='h-3 w-3 text-white' fill='currentColor' viewBox='0 0 20 20'>
+																	<path fillRule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clipRule='evenodd' />
+																</svg>
+															</div>
+														)}
+													</div>
+												</button>
+											))}
+										</div>
+										{/* Always visible Add New Address button */}
 										<button
 											onClick={() => {
 												setShowAddressForm(true);
 												setShowAddressDropdown(false);
 											}}
-											className='w-full flex items-center justify-center gap-2 p-4 text-stone-700 hover:bg-stone-50 transition-colors border-t border-stone-200'
+											className='w-full flex items-center justify-center gap-2 p-4 text-stone-700 hover:bg-stone-50 transition-colors border-t border-stone-200 flex-shrink-0'
 										>
 											<Plus size={18} />
 											Add New Address
