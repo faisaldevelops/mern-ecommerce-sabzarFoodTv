@@ -122,26 +122,47 @@ export const reserveStock = async (products) => {
 /**
  * Release reserved stock for products
  * @param {Array} products - Array of { product (id), quantity }
+ * @returns {Object} - { success: boolean, errors?: Array }
  */
 export const releaseReservedStock = async (products) => {
+  const errors = [];
+  
   for (const item of products) {
     const productId = item.product || item._id || item.id;
     const qty = item.quantity || 1;
     
-    // Use $max to prevent reservedQuantity from going below 0
-    await Product.findByIdAndUpdate(
-      productId,
-      [
-        {
-          $set: {
-            reservedQuantity: {
-              $max: [0, { $subtract: ["$reservedQuantity", qty] }]
+    try {
+      // Use $max to prevent reservedQuantity from going below 0
+      const result = await Product.findByIdAndUpdate(
+        productId,
+        [
+          {
+            $set: {
+              reservedQuantity: {
+                $max: [0, { $subtract: ["$reservedQuantity", qty] }]
+              }
             }
           }
-        }
-      ]
-    );
+        ],
+        { new: true }
+      );
+      
+      if (!result) {
+        console.warn(`⚠️  Product ${productId} not found when releasing reserved stock`);
+        errors.push({ productId, error: "Product not found" });
+      } else {
+        console.log(`✓ Released ${qty} units of product ${productId} (new reserved: ${result.reservedQuantity})`);
+      }
+    } catch (error) {
+      console.error(`❌ Error releasing stock for product ${productId}:`, error);
+      errors.push({ productId, error: error.message });
+    }
   }
+  
+  return {
+    success: errors.length === 0,
+    errors: errors.length > 0 ? errors : undefined
+  };
 };
 
 /**
@@ -194,7 +215,13 @@ export const finalizeOrder = async (orderId) => {
     order.status = "expired";
     await order.save();
     // Release reserved stock
-    await releaseReservedStock(order.products);
+    console.log(`⏰ Order ${orderId} expired during finalization, releasing stock`);
+    const releaseResult = await releaseReservedStock(order.products);
+    
+    if (!releaseResult.success) {
+      console.warn(`⚠️  Some items failed to release stock for expired order ${orderId}:`, releaseResult.errors);
+    }
+    
     return { success: false, error: "Order hold has expired" };
   }
   
@@ -290,7 +317,11 @@ export const releaseExpiredHolds = async () => {
   for (const order of expiredOrders) {
     try {
       // Release reserved stock
-      await releaseReservedStock(order.products);
+      const releaseResult = await releaseReservedStock(order.products);
+      
+      if (!releaseResult.success) {
+        console.warn(`⚠️  Some items failed to release stock for expired order ${order._id}:`, releaseResult.errors);
+      }
       
       // Update order status
       order.status = "expired";
@@ -355,8 +386,14 @@ export const cancelHoldOrder = async (orderId) => {
     return { success: false, error: "Order not found or not in hold status" };
   }
   
+  console.log(`🔄 Releasing reserved stock for order ${orderId}`);
+  
   // Release reserved stock
-  await releaseReservedStock(order.products);
+  const releaseResult = await releaseReservedStock(order.products);
+  
+  if (!releaseResult.success) {
+    console.warn(`⚠️  Some items failed to release stock for order ${orderId}:`, releaseResult.errors);
+  }
   
   // Update order status
   order.status = "cancelled";
@@ -367,7 +404,7 @@ export const cancelHoldOrder = async (orderId) => {
   });
   await order.save();
   
-  return { success: true, order };
+  return { success: true, order, releaseResult };
 };
 
 // Start the hold expiry cleanup job (runs every minute)

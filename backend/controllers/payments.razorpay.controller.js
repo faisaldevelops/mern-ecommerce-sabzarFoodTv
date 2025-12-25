@@ -119,10 +119,16 @@ export const createRazorpayOrder = async (req, res) => {
       razorpayOrder = await razorpay.orders.create(options);
     } catch (rzpError) {
       // If Razorpay order creation fails, release reserved stock
-      await releaseReservedStock(products.map(p => ({
+      console.log(`❌ Razorpay order creation failed, releasing reserved stock`);
+      const releaseResult = await releaseReservedStock(products.map(p => ({
         product: p._id || p.id,
         quantity: p.quantity
       })));
+      
+      if (!releaseResult.success) {
+        console.error(`⚠️  Failed to release some reserved stock after Razorpay error:`, releaseResult.errors);
+      }
+      
       throw rzpError;
     }
 
@@ -225,7 +231,13 @@ export const verifyRazorpayPayment = async (req, res) => {
       // Mark as expired and release stock
       order.status = "expired";
       await order.save();
-      await releaseReservedStock(order.products);
+      
+      console.log(`⏰ Order ${order._id} expired during payment verification, releasing stock`);
+      const releaseResult = await releaseReservedStock(order.products);
+      
+      if (!releaseResult.success) {
+        console.warn(`⚠️  Some items failed to release stock:`, releaseResult.errors);
+      }
       
       return res.status(400).json({
         success: false,
@@ -299,18 +311,22 @@ export const cancelHold = async (req, res) => {
     const { localOrderId } = req.body;
     
     if (!localOrderId) {
+      console.warn("⚠️  cancelHold called without localOrderId");
       return res.status(400).json({ message: "localOrderId is required" });
     }
     
+    console.log(`🔄 Cancelling hold order ${localOrderId}`);
     const result = await cancelHoldOrder(localOrderId);
     
     if (!result.success) {
+      console.warn(`❌ Failed to cancel hold order ${localOrderId}: ${result.error}`);
       return res.status(400).json({ message: result.error });
     }
     
+    console.log(`✓ Hold order ${localOrderId} cancelled successfully`);
     return res.json({ success: true, message: "Hold cancelled successfully" });
   } catch (err) {
-    console.error("cancelHold:", err);
+    console.error("❌ cancelHold error:", err);
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
@@ -332,12 +348,17 @@ export const razorpayWebhook = async (req, res) => {
         console.warn("Razorpay webhook signature mismatch");
         return res.status(400).send("invalid signature");
       }
+    } else {
+      console.warn("⚠️  RAZORPAY_WEBHOOK_SECRET not configured - webhook signature not verified!");
     }
 
     const event = JSON.parse(body.toString());
+    console.log(`📥 Razorpay webhook received: ${event.event}`);
+    
     // handle event types you care about
     if (event.event === "payment.captured") {
       const payment = event.payload.payment.entity;
+      console.log(`✅ Payment captured for order ${payment.order_id}`);
       // find order by razorpay order id
       const order = await Order.findOne({ razorpayOrderId: payment.order_id });
       if (order) {
@@ -347,6 +368,7 @@ export const razorpayWebhook = async (req, res) => {
           if (result.success) {
             order.razorpayPaymentId = payment.id;
             await order.save();
+            console.log(`✓ Order ${order._id} finalized successfully`);
           } else {
             console.warn("Webhook: finalize failed for order", order._id, result.error);
           }
@@ -357,27 +379,40 @@ export const razorpayWebhook = async (req, res) => {
       }
     } else if (event.event === "payment.failed") {
       const payment = event.payload.payment.entity;
+      console.log(`❌ Payment failed for order ${payment.order_id}, error: ${payment.error_code} - ${payment.error_description}`);
       // find order by razorpay order id
       const order = await Order.findOne({ razorpayOrderId: payment.order_id });
       if (order && order.status === "hold") {
+        console.log(`🔄 Releasing reserved stock for failed payment, order ${order._id}`);
+        
+        // Release reserved stock
+        const releaseResult = await releaseReservedStock(order.products);
+        
+        if (!releaseResult.success) {
+          console.warn(`⚠️  Some items failed to release stock:`, releaseResult.errors);
+        }
+        
         // Update order status to cancelled
         order.status = "cancelled";
         order.trackingStatus = "cancelled";
         order.trackingHistory.push({
           status: "cancelled",
           timestamp: new Date(),
-          note: "Payment failed - order cancelled"
+          note: `Payment failed: ${payment.error_description || 'Unknown error'}`
         });
         await order.save();
-        // Release reserved stock
-        await releaseReservedStock(order.products);
+        console.log(`✓ Reserved stock released for order ${order._id}`);
+      } else if (order) {
+        console.log(`ℹ️  Order ${order._id} already in status: ${order.status}, skipping stock release`);
+      } else {
+        console.warn(`⚠️  No order found for failed payment ${payment.order_id}`);
       }
     }
 
     // respond quickly
     res.json({ status: "ok" });
   } catch (err) {
-    console.error("razorpayWebhook:", err);
+    console.error("❌ razorpayWebhook error:", err);
     res.status(500).send("server error");
   }
 };
