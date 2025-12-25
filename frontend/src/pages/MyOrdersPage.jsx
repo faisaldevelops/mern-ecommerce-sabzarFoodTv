@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Package, Truck, CheckCircle, XCircle, Clock, MapPin, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { Package, Truck, CheckCircle, XCircle, Clock, MapPin, Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "../lib/axios";
 import toast from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -8,21 +8,43 @@ import LoadingSpinner from "../components/LoadingSpinner";
 const MyOrdersPage = () => {
 	const [orders, setOrders] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
+	
+	// Pagination state
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize] = useState(4); // 4 orders per page
+	const [pagination, setPagination] = useState({
+		totalOrders: 0,
+		totalPages: 0,
+		currentPage: 1,
+		hasNextPage: false,
+		hasPrevPage: false
+	});
+
+	const fetchOrders = useCallback(async (pageToFetch = null) => {
+		try {
+			setIsLoading(true);
+			const page = pageToFetch !== null ? pageToFetch : currentPage;
+			const response = await axios.get(`/orders/my-orders?page=${page}&limit=${pageSize}`);
+			setOrders(response.data.data || []);
+			
+			// Update pagination metadata
+			if (response.data.pagination) {
+				setPagination(response.data.pagination);
+				if (pageToFetch !== null && pageToFetch !== currentPage) {
+					setCurrentPage(page);
+				}
+			}
+		} catch (error) {
+			console.error("Error fetching orders:", error);
+			toast.error(error.response?.data?.message || "Failed to fetch orders");
+		} finally {
+			setIsLoading(false);
+		}
+	}, [currentPage, pageSize]);
 
 	useEffect(() => {
-		const fetchOrders = async () => {
-			try {
-				const response = await axios.get("/orders/my-orders");
-				setOrders(response.data.data || []);
-			} catch (error) {
-				console.error("Error fetching orders:", error);
-				toast.error(error.response?.data?.message || "Failed to fetch orders");
-			} finally {
-				setIsLoading(false);
-			}
-		};
 		fetchOrders();
-	}, []);
+	}, [fetchOrders]);
 
 	const getStatusConfig = (status) => {
 		const configs = {
@@ -146,7 +168,104 @@ const MyOrdersPage = () => {
 		return <LoadingSpinner />;
 	}
 
-	if (orders.length === 0) {
+	const handlePageChange = (newPage) => {
+		if (newPage >= 1 && newPage <= pagination.totalPages) {
+			setCurrentPage(newPage);
+			// Scroll to top when page changes
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	};
+
+	const renderPaginationControls = () => {
+		if (pagination.totalPages <= 1) return null;
+
+		const pages = [];
+		const maxVisiblePages = 5;
+		let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+		let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
+
+		if (endPage - startPage < maxVisiblePages - 1) {
+			startPage = Math.max(1, endPage - maxVisiblePages + 1);
+		}
+
+		for (let i = startPage; i <= endPage; i++) {
+			pages.push(i);
+		}
+
+		return (
+			<div className="flex items-center justify-center gap-2 mt-8">
+				<button
+					onClick={() => handlePageChange(currentPage - 1)}
+					disabled={!pagination.hasPrevPage}
+					className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+						pagination.hasPrevPage
+							? 'bg-gray-700 text-white hover:bg-gray-600'
+							: 'bg-gray-800 text-gray-500 cursor-not-allowed'
+					}`}
+				>
+					<ChevronLeft className="w-4 h-4" />
+					Previous
+				</button>
+
+				{startPage > 1 && (
+					<>
+						<button
+							onClick={() => handlePageChange(1)}
+							className="px-3 py-2 rounded-md text-sm font-medium bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+						>
+							1
+						</button>
+						{startPage > 2 && (
+							<span className="px-2 text-gray-400">...</span>
+						)}
+					</>
+				)}
+
+				{pages.map((page) => (
+					<button
+						key={page}
+						onClick={() => handlePageChange(page)}
+						className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+							page === currentPage
+								? 'bg-emerald-600 text-white'
+								: 'bg-gray-700 text-white hover:bg-gray-600'
+						}`}
+					>
+						{page}
+					</button>
+				))}
+
+				{endPage < pagination.totalPages && (
+					<>
+						{endPage < pagination.totalPages - 1 && (
+							<span className="px-2 text-gray-400">...</span>
+						)}
+						<button
+							onClick={() => handlePageChange(pagination.totalPages)}
+							className="px-3 py-2 rounded-md text-sm font-medium bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+						>
+							{pagination.totalPages}
+						</button>
+					</>
+				)}
+
+				<button
+					onClick={() => handlePageChange(currentPage + 1)}
+					disabled={!pagination.hasNextPage}
+					className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+						pagination.hasNextPage
+							? 'bg-gray-700 text-white hover:bg-gray-600'
+							: 'bg-gray-800 text-gray-500 cursor-not-allowed'
+					}`}
+				>
+					Next
+					<ChevronRight className="w-4 h-4" />
+				</button>
+			</div>
+		);
+	};
+
+	if (orders.length === 0 && !isLoading) {
 		return (
 			<div className="min-h-screen bg-stone-900 flex items-center justify-center">
 				<div className="text-center">
@@ -166,7 +285,21 @@ const MyOrdersPage = () => {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5 }}
 				>
-					<h1 className="text-4xl font-bold text-emerald-400 mb-2">My Orders</h1>
+					<div className="flex items-center justify-between mb-2">
+						<h1 className="text-4xl font-bold text-emerald-400">My Orders</h1>
+						{pagination.totalOrders > 0 && (
+							<div className="text-right">
+								<p className="text-gray-400 text-sm">
+									Showing {orders.length} of {pagination.totalOrders} order{pagination.totalOrders !== 1 ? 's' : ''}
+								</p>
+								{pagination.totalPages > 1 && (
+									<p className="text-gray-500 text-xs mt-1">
+										Page {pagination.currentPage} of {pagination.totalPages}
+									</p>
+								)}
+							</div>
+						)}
+					</div>
 					<p className="text-gray-400 mb-8">Track and manage your orders</p>
 				</motion.div>
 
@@ -299,6 +432,9 @@ const MyOrdersPage = () => {
 						</motion.div>
 					))}
 				</div>
+
+				{/* Pagination Controls */}
+				{renderPaginationControls()}
 			</div>
 		</div>
 	);

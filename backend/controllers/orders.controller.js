@@ -164,12 +164,27 @@ export const getOrdersData = async (req, res) => {
 
 export const getUserOrders = async (req, res) => {
 	try {
+		// Extract pagination parameters from query
+		const { page, limit } = req.query;
+		
+		// Pagination parameters
+		const pageNumber = parseInt(page) || 1;
+		const pageSize = parseInt(limit) || 4; // Default 4 orders per page
+		const skip = (pageNumber - 1) * pageSize;
+		
+		// Get total count for pagination
+		const totalOrders = await Order.countDocuments({ user: req.user._id });
+		const totalPages = Math.ceil(totalOrders / pageSize);
+		
+		// Find orders with pagination, sorted by latest first (createdAt: -1)
 		const orders = await Order.find({ user: req.user._id })
 			.populate({
 				path: 'products.product',
 				select: 'name price image',
 			})
-			.sort({ createdAt: -1 })
+			.sort({ createdAt: -1 }) // Latest orders first
+			.skip(skip)
+			.limit(pageSize)
 			.lean();
 
 		const formatted = orders.map(order => ({
@@ -190,7 +205,18 @@ export const getUserOrders = async (req, res) => {
 			trackingHistory: order.trackingHistory,
 		}));
 
-		res.json({ success: true, data: formatted });
+		res.json({ 
+			success: true, 
+			data: formatted,
+			pagination: {
+				currentPage: pageNumber,
+				pageSize: pageSize,
+				totalOrders: totalOrders,
+				totalPages: totalPages,
+				hasNextPage: pageNumber < totalPages,
+				hasPrevPage: pageNumber > 1
+			}
+		});
 	} catch (error) {
 		console.error('Error fetching user orders:', error);
 		res.status(500).json({ success: false, message: 'Server error fetching user orders' });
