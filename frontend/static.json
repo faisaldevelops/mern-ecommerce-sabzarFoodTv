@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "**",
+      "destination": "/index.html"
+    }
+  ],
   "headers": {
     "/(.*)": {
       "Content-Security-Policy": "default-src 'self'; img-src 'self' data:;"
