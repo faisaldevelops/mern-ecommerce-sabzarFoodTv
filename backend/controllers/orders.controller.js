@@ -4,6 +4,9 @@ import mongoose from "mongoose";
 import twilio from "twilio";
 import { getDeliveryType } from "../lib/pricing.js";
 
+// Constants for label generation
+const PRODUCT_REMOVED_LABEL = 'PRODUCT_REMOVED';
+
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -44,6 +47,12 @@ const sendOrderStatusSMS = async (phoneNumber, orderPublicId, status) => {
 		console.error(`[SMS LOG] Error logging SMS for ${phoneNumber}:`, error.message);
 		return { success: false, reason: error.message };
 	}
+};
+
+// Helper function to capitalize first letter of a string
+const capitalizeFirstLetter = (str) => {
+	if (!str || typeof str !== 'string') return str;
+	return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
 export const getOrdersData = async (req, res) => {
@@ -481,7 +490,7 @@ export const getBulkAddressSheets = async (req, res) => {
 			.populate('user', 'name phoneNumber')
 			.populate({
 				path: 'products.product',
-				select: 'name price'
+				select: 'name'
 			})
 			.sort({ createdAt: 1 })
 			.lean();
@@ -524,7 +533,7 @@ export const getBulkAddressSheets = async (req, res) => {
 			
 			products.forEach(productItem => {
 				const product = productItem.product;
-				const productName = product?.name || 'PRODUCT_REMOVED';
+				const productName = product?.name || PRODUCT_REMOVED_LABEL;
 				const quantity = productItem.quantity || 1;
 				
 				// Initialize product group if not exists
@@ -557,7 +566,7 @@ export const getBulkAddressSheets = async (req, res) => {
 		const appliedFilters = [];
 		appliedFilters.push('Status: Processing');
 		if (deliveryType) {
-			appliedFilters.push(`Delivery Type: ${deliveryType.charAt(0).toUpperCase() + deliveryType.slice(1)}`);
+			appliedFilters.push(`Delivery Type: ${capitalizeFirstLetter(deliveryType)}`);
 		}
 		if (phoneNumber) {
 			appliedFilters.push(`Phone: ${phoneNumber}`);
@@ -576,8 +585,10 @@ export const getBulkAddressSheets = async (req, res) => {
 		let addressSheetsHTML = '';
 		const labelsPerPage = 6;
 		
-		// Sort product names alphabetically
-		const sortedProductNames = Object.keys(labelsByProduct).sort();
+		// Sort product names alphabetically with locale-aware comparison
+		const sortedProductNames = Object.keys(labelsByProduct).sort((a, b) => 
+			a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' })
+		);
 		
 		sortedProductNames.forEach((productName, productIndex) => {
 			const labels = labelsByProduct[productName];
